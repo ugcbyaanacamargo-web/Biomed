@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Plataforma de estudo sobre sensibilidade somática, nocicepção, modulação da dor e Teoria do Portão." />
+  <meta name="theme-color" content="#0b4f8a" />
+  <title>Biomed | Sensibilidade Somática e Modulação da Dor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="scroll-progress" id="scrollProgress"></div>
+
+  <header class="topbar">
+    <a class="brand" href="#inicio" aria-label="Início">
+      <span class="brand-mark">🧠</span>
+      <span><strong>BIOMED</strong><small>Estudo guiado de fisiologia sensorial</small></span>
+    </a>
+    <div class="top-actions">
+      <button class="icon-btn" id="searchBtn" aria-label="Abrir busca">⌕</button>
+      <button class="icon-btn" id="themeBtn" aria-label="Alternar tema">◐</button>
+      <button class="icon-btn mobile-only" id="menuBtn" aria-label="Abrir menu">☰</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <p class="eyebrow">ÍNDICE</p>
+        <h2>Mapa de estudo</h2>
+        <p>Avance na ordem sugerida ou vá direto ao tópico que precisa revisar.</p>
+      </div>
+
+      <nav class="toc" aria-label="Índice da matéria">
+        <a href="#inicio">Visão geral</a>
+        <a href="#fundamentos">1. Fundamentos</a>
+        <a href="#modalidades">2. Modalidades sensoriais</a>
+        <a href="#receptores">3. Receptores</a>
+        <a href="#fibras">4. Fibras nervosas</a>
+        <a href="#vias">5. Vias ascendentes</a>
+        <a href="#dor">6. Nocicepção e dor</a>
+        <a href="#portao">7. Teoria do Portão</a>
+        <a href="#descendente">8. Modulação descendente</a>
+        <a href="#atencao">9. Atenção e emoções</a>
+        <a href="#semaforo">10. Semáforo Sensorial</a>
+        <a href="#clinica">11. Aplicação clínica</a>
+        <a href="#resumo">12. Resumo de prova</a>
+        <a href="#flashcards">13. Flashcards</a>
+        <a href="#quiz">14. Quiz</a>
+        <a href="#glossario">15. Glossário</a>
+        <a href="#referencias">Referências</a>
+      </nav>
+
+      <div class="progress-card">
+        <div class="progress-row">
+          <span>Progresso</span>
+          <strong id="progressText">0%</strong>
+        </div>
+        <div class="progress-track"><div id="studyProgress"></div></div>
+        <button class="link-btn" id="resetProgress">Reiniciar marcações</button>
+      </div>
+    </aside>
+
+    <main>
+      <section class="hero section" id="inicio" data-module="inicio">
+        <div class="hero-copy">
+          <span class="pill">Fisiologia • Sistema Somatossensorial</span>
+          <h1>Sensibilidade Somática e <span>Modulação da Dor</span></h1>
+          <p class="lead">
+            Um guia completo para entender como o corpo detecta toque, pressão, vibração, temperatura,
+            posição corporal e estímulos nocivos — e como medula, cérebro, atenção e emoção podem modificar
+            a experiência dolorosa.
+          </p>
+          <div class="hero-actions">
+            <a class="btn primary" href="#fundamentos">Começar do zero</a>
+            <a class="btn secondary" href="#resumo">Ir para revisão de prova</a>
+          </div>
+          <div class="hero-facts">
+            <div><strong>15</strong><span>módulos de estudo</span></div>
+            <div><strong>3</strong><span>níveis no semáforo</span></div>
+            <div><strong>10</strong><span>questões interativas</span></div>
+          </div>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="neuro-card">
+            <div class="neuro-icon">🧠</div>
+            <div class="signal s1"></div><div class="signal s2"></div><div class="signal s3"></div>
+            <p><strong>Estímulo → processamento → percepção</strong></p>
+            <small>A dor não é uma leitura direta do dano: é uma experiência construída pelo sistema nervoso.</small>
+          </div>
+        </div>
+      </section>
+
+      <section class="callout note">
+        <strong>Ideia central</strong>
+        <p>
+          O estímulo é captado na periferia, convertido em sinal elétrico, conduzido por fibras nervosas,
+          processado na medula e em diferentes regiões do encéfalo. Durante esse percurso, a informação pode
+          ser amplificada ou inibida.
+        </p>
+      </section>
+
+      <section class="section content-section" id="fundamentos" data-module="fundamentos">
+        <div class="section-heading">
+          <span class="step">01</span>
+          <div><p class="eyebrow">BASE</p><h2>O que é sensibilidade somática?</h2></div>
+        </div>
+        <p>
+          A <strong>sensibilidade somática</strong> é o conjunto de mecanismos que permite perceber estímulos
+          vindos principalmente da pele, músculos, tendões e articulações. Ela integra informações do ambiente
+          externo e do próprio corpo, ajudando na proteção, no controle do movimento e na interação com o mundo.
+        </p>
+
+        <div class="grid three">
+          <article class="card">
+            <div class="card-icon">✋</div><h3>Detecta</h3>
+            <p>Receptores especializados reconhecem energia mecânica, térmica ou potencialmente lesiva.</p>
+          </article>
+          <article class="card">
+            <div class="card-icon">⚡</div><h3>Transmite</h3>
+            <p>O estímulo é convertido em potenciais de ação e conduzido por fibras aferentes.</p>
+          </article>
+          <article class="card">
+            <div class="card-icon">🧠</div><h3>Interpreta</h3>
+            <p>Medula, tronco encefálico, tálamo e córtex participam do processamento e da percepção.</p>
+          </article>
+        </div>
+
+        <details class="study-detail">
+          <summary>Entenda sem decorar: qual é a lógica?</summary>
+          <div>
+            <p><strong>Receptor → nervo → medula → encéfalo → percepção.</strong> A modalidade sensorial e a via usada dependem do tipo de receptor e da fibra ativada.</p>
+            <p>A percepção final não depende apenas da intensidade física do estímulo; contexto, atenção, experiências anteriores e emoção também podem interferir, especialmente na dor.</p>
+          </div>
+        </details>
+
+        <label class="done-check"><input type="checkbox" data-complete="fundamentos"> Marcar módulo como estudado</label>
+      </section>
+
+      <section class="section content-section" id="modalidades" data-module="modalidades">
+        <div class="section-heading">
+          <span class="step">02</span>
+          <div><p class="eyebrow">MODALIDADES</p><h2>O que o sistema somatossensorial percebe?</h2></div>
+        </div>
+        <div class="grid five compact-grid">
+          <article class="mini-card"><span>🤏</span><h3>Tato</h3><p>Contato, textura e forma.</p></article>
+          <article class="mini-card"><span>📳</span><h3>Vibração</h3><p>Oscilações rápidas da pele e tecidos.</p></article>
+          <article class="mini-card"><span>🌡️</span><h3>Temperatura</h3><p>Frio e calor.</p></article>
+          <article class="mini-card"><span>⚠️</span><h3>Dor</h3><p>Experiência ligada a ameaça ou dano real/potencial.</p></article>
+          <article class="mini-card"><span>🦵</span><h3>Propriocepção</h3><p>Posição e movimento dos segmentos corporais.</p></article>
+        </div>
+        <div class="callout source">
+          <strong>Base científica</strong>
+          <p>Fontes de fisiologia sensorial descrevem como sentidos gerais: toque, dor, temperatura, propriocepção, vibração e pressão.</p>
+          <a href="https://www.ncbi.nlm.nih.gov/books/NBK547656/" target="_blank" rel="noreferrer">NCBI Bookshelf — Physiology, Sensory System ↗</a>
+        </div>
+        <label class="done-check"><input type="checkbox" data-complete="modalidades"> Marcar módulo como estudado</label>
+      </section>
+
+      <section class="section content-section" id="receptores" data-module="receptores">
+        <div class="section-heading">
+          <span class="step">03</span>
+          <div><p class="eyebrow">RECEPTORES</p><h2>Quem “capta” cada estímulo?</h2></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Tipo</th><th>O que detecta</th><th>Exemplo funcional</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Mecanorreceptores</strong></td><td>Toque, pressão, vibração e deformação</td><td>Perceber textura, pressão de um objeto ou vibração.</td></tr>
+              <tr><td><strong>Termorreceptores</strong></td><td>Variações de temperatura</td><td>Perceber frio e calor.</td></tr>
+              <tr><td><strong>Nociceptores</strong></td><td>Estímulos potencialmente lesivos</td><td>Responder a calor intenso, pressão forte ou mediadores químicos.</td></tr>
+              <tr><td><strong>Proprioceptores</strong></td><td>Comprimento/tensão muscular e posição articular</td><td>Saber onde está a perna mesmo de olhos fechados.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="concept-flow" aria-label="Fluxo da transdução sensorial">
+          <div><span>1</span><strong>Estímulo</strong><small>mecânico, térmico ou nocivo</small></div>
+          <b>→</b>
+          <div><span>2</span><strong>Transdução</strong><small>energia vira sinal elétrico</small></div>
+          <b>→</b>
+          <div><span>3</span><strong>Condução</strong><small>potenciais de ação na fibra</small></div>
+          <b>→</b>
+          <div><span>4</span><strong>Processamento</strong><small>medula + encéfalo</small></div>
+        </div>
+        <label class="done-check"><input type="checkbox" data-complete="receptores"> Marcar módulo como estudado</label>
+      </section>
+
+      <section class="section content-section" id="fibras" data-module="fibras">
+        <div class="section-heading">
+          <span class="step">04</span>
+          <div><p class="eyebrow">FIBRAS</p><h2>Aβ, Aδ e C: o que muda?</h2></div>
+        </div>
+
+        <div class="fiber-grid">
+          <article class="fiber-card beta">
+            <div class="fiber-head"><span>Aβ</span><strong>grande diâmetro • mielinizada • rápida</strong></div>
+            <h3>Toque e pressão</h3>
+            <p>Conduz informação mecanossensorial, incluindo toque e pressão. Sua ativação pode recrutar circuitos inibitórios na medula e reduzir a transmissão nociceptiva.</p>
+          </article>
+          <article class="fiber-card delta">
+            <div class="fiber-head"><span>Aδ</span><strong>pequeno/médio diâmetro • fina mielina • rápida</strong></div>
+            <h3>“Primeira dor”</h3>
+            <p>Associada à dor inicial, mais aguda e relativamente bem localizada. Também pode conduzir frio e alguns estímulos mecânicos.</p>
+          </article>
+          <article class="fiber-card c">
+            <div class="fiber-head"><span>C</span><strong>pequeno diâmetro • sem mielina • lenta</strong></div>
+            <h3>“Segunda dor”</h3>
+            <p>Associada à dor mais lenta, difusa, persistente ou em queimação, além de calor e outros estímulos.</p>
+          </article>
+        </div>
+
+        <div class="memory-hook">
+          <strong>Macete de estudo:</strong>
+          <span>Aβ = toque/pressão; Aδ = dor rápida/aguda; C = dor lenta/difusa.</span>
+        </div>
+        <p class="source-line">Fontes: <a href="https://www.ncbi.nlm.nih.gov/books/NBK547656/" target="_blank" rel="noreferrer">NCBI Sensory System</a> e <a href="https://www.ncbi.nlm.nih.gov/books/NBK10963/" target="_blank" rel="noreferrer">The Perception of Pain</a>.</p>
+        <label class="done-check"><input type="checkbox" data-complete="fibras"> Marcar módulo como estudado</label>
+      </section>
+
+      <section class="section content-section" id="vias" data-module="vias">
+        <div class="section-heading">
+          <span class="step">05</span>
+          <div><p class="eyebrow">VIAS ASCENDENTES</p><h2>Como a informação chega ao cérebro?</h2></div>
+        </div>
+        <div class="pathway-layout">
+          <article class="path-card">
+            <div class="path-badge">A</div>
+            <h3>Coluna dorsal–lemnisco medial</h3>
+            <p><strong>Principalmente:</strong> tato discriminativo, vibração e propriocepção.</p>
+            <ol>
+              <li>Receptor periférico ativa fibra aferente.</li>
+              <li>Sinal sobe pela medula nas colunas dorsais.</li>
+              <li>Faz sinapse no tronco encefálico.</li>
+              <li>Cruza e segue pelo lemnisco medial.</li>
+              <li>Chega ao tálamo e ao córtex somatossensorial.</li>
+            </ol>
+          </article>
+          <article class="path-card">
+            <div class="path-badge">B</div>
+            <h3>Sistema anterolateral / espinotalâmico</h3>
+            <p><strong>Principalmente:</strong> dor, temperatura e tato grosseiro.</p>
+            <ol>
+              <li>Aferentes nociceptivos entram no corno dorsal.</li>
+              <li>Neurônios de segunda ordem recebem o sinal.</li>
+              <li>Muitos axônios cruzam na medula.</li>
+              <li>Ascendem pelo sistema anterolateral.</li>
+              <li>Projetam para tálamo e múltiplas regiões encefálicas.</li>
+            </ol>
+          </article>
+        </div>
+        <div class="callout warning">
+          <strong>Não simplifique demais:</strong>
+          <p>A dor envolve mais de uma via e várias regiões encefálicas. O córtex somatossensorial ajuda na localização e intensidade; áreas como ínsula, cíngulo e amígdala participam de componentes afetivos e motivacionais.</p>
+        </div>
+        <label class="done-check"><input type="checkbox" data-complete="vias"> Marcar módulo como estudado</label>
+      </section>
+
+      <section class="section content-section" id="dor" data-module="dor">
+        <div class="section-heading">
+          <span class="step">06</span>
+          <div><p class="eyebrow">NOCICEPÇÃO</p><h2>Nocicepção não é sinônimo de dor</h2></div>
+        </div>
+
+        <div class="compare-grid">
+          <article class="compare-card">
+            <span class="tag">PROCESSO NEURAL</span>
+            <h3>Nocicepção</h3>
+            <p>É a detecção e transmissão neural de estímulos potencialmente lesivos. Envolve nociceptores, fibras periféricas, medula e vias ascendentes.</p>
+          </article>
+          <article class="compare-card accent">
+            <span class="tag">EXPERIÊNCIA</span>
+            <h3>Dor</h3>
+            <p>É uma experiência sensorial e emocional desagradável. É pessoal e pode ser influenciada por fatores biológicos, psicológicos e sociais.</p>
+          </article>
+        </div>
+
+        <blockquote>
+          “A dor é uma experiência sensorial e emocional desagradável associada, ou semelhante à associada, a dano tecidual real ou potencial.”
+          <cite>Definição revisada da IASP (tradução explicativa).</cite>
+        </blockquote>
+
+        <div class="callout source">
+          <strong>Fonte essencial</strong>
+          <p>A IASP destaca que dor é uma experiência pessoal e que fatores biológicos, psicológicos e sociais podem influenciá-la.</p>
+          <a href="https://www.iasp-pain.org/wp-content/uploads/2022/04/revised-definition-flysheet_R2-1-1-1.pdf" target="_blank" rel="noreferrer">IASP — Revised Definition of Pain ↗</a>
+        </div>
+        <label class="done-check"><input type="checkbox" data-complete="dor"> Marcar módulo como estudado</label>
+      </section>
+
+      <section class="section content-section gate-section" id="portao" data-module="portao">
+        <div class="section-heading">
+          <span class="step">07</span>
+          <div><p class="eyebrow">MODULAÇÃO</p><h2>Teoria do Portão da Dor</h2></div>
+        </div>
+        <p>
+          A Teoria do Portão, proposta por Melzack e Wall em 1965, ajudou a explicar que a transmissão da dor
+          pode ser modulada no <strong>corno dorsal da medula</strong>. O modelo clássico usa a ideia de um
+          “portão” funcional: a atividade de diferentes fibras e interneurônios pode favorecer ou reduzir a
+          passagem do sinal nociceptivo para neurônios de projeção.
+        </p>
+
+        <div class="gate-demo">
+          <div class="gate-column pain-input">
+            <span class="dot red"></span>
+            <h3>Aδ / C</h3>
+            <p>Entrada nociceptiva</p>
+          </div>
+          <div class="gate-column touch-input">
+            <span class="dot blue"></span>
+            <h3>Aβ</h3>
+            <p>Toque / pressão / vibração</p>
+          </div>
+          <div class="gate-center">
+            <div class="gate-door" id="gateDoor"><span>PORTÃO</span></div>
+            <p id="gateText">Clique nos botões para visualizar o conceito.</p>
+            <div class="gate-buttons">
+              <button class="btn danger" data-gate="open">Predomínio nociceptivo</button>
+              <button class="btn success" data-gate="closed">Ativar toque/pressão</button>
+            </div>
+          </div>
+          <div class="gate-output">
+            <span class="arrow">→</span>
+            <h3>Neurônio de projeção</h3>
+            <p>Sinal ascendente</p>
+          </div>
+        </div>
+
+        <div class="case-card">
+          <div class="case-icon">🦵</div>
+          <div>
+            <h3>Por que esfregar um local machucado pode aliviar temporariamente?</h3>
+            <p>
+              O estímulo tátil ativa fibras de maior diâmetro, como Aβ. No modelo de modulação espinal, essa atividade
+              pode aumentar a ação de interneurônios inibitórios e reduzir a transmissão nociceptiva para neurônios de projeção.
+            </p>
+          </div>
+        </div>
+
+        <p class="source-line">Fontes: <a href="https://www.ncbi.nlm.nih.gov/books/NBK545194/" target="_blank" rel="noreferrer">Pain Theory</a> e <a href="https://www.ncbi.nlm.nih.gov/books/NBK551522/" target="_blank" rel="noreferrer">Substantia Gelatinosa</a>.</p>
+        <label class="done-check"><input type="checkbox" data-complete="portao"> Marcar módulo como estudado</label>
+      </section>
+
+      <section class="section content-section" id="descendente" data-module="descendente">
+        <div class="section-heading">
+          <span class="step">08</span>
+          <div><p class="eyebrow">CONTROLE CENTRAL</p><h2>Modulação descendente da dor</h2></div>
+        </div>
+        <p>
+          O encéfalo não apenas recebe informação dolorosa: ele também envia sinais de volta para a medula e pode
+          <strong>inibir ou facilitar</strong> a transmissão nociceptiva. Essa regulação envolve circuitos do mesencéfalo
+          e do tronco encefálico, com participação de neurotransmissores como serotonina e noradrenalina e de sistemas opioides endógenos.
+        </p>
+
+        <div class="descending-flow">
+          <div class="brain-node">🧠<strong>Centros superiores</strong><small>cognição, contexto, emoção</small></div>
+          <div class="down-arrow">↓</div>
+          <div class="brain-node">◉<strong>Substância cinzenta periaquedutal</strong><small>integra controle descendente</small></div>
+          <div class="down-arrow">↓</div>
+          <div class="brain-node">⇣<strong>Tronco encefálico</strong><small>núcleos moduladores</small></div>
+          <div class="down-arrow">↓</div>
+          <div class="brain-node">║<strong>Corno dorsal da medula</strong><small>modula neurônios nociceptivos</small></div>
+        </div>
+
+        <div class="callout note">
+          <strong>O que isso significa na prática?</strong>
+          <p>A mesma entrada nociceptiva pode gerar percepções diferentes dependendo do estado do sistema modulador. Isso não significa que a dor seja “inventada”; significa que sua intensidade final depende do processamento neural.</p>
+        </div>
+
+        <p class="source-line">Fonte: <a href="https://www.ncbi.nlm.nih.gov/books/NBK10985/" target="_blank" rel="noreferrer">The Physiological Basis of Pain Modulation — NCBI</a>.</p>
+        <label class="done-check"><input type="checkbox" data-complete="descendente"> Marcar módulo como estudado</label>
+      </section>
+
+      <section class="section content-section" id="atencao" data-module="atencao">
+        <div class="section-heading">
+          <span class="step">09</span>
+          <div><p class="eyebrow">PERCEPÇÃO</p><h2>Atenção, emoção e contexto</h2></div>
+        </div>
+        <div class="grid three">
+          <article class="card attention"><div class="card-icon">🎯</div><h3>Atenção</h3><p>Focar intensamente no estímulo pode aumentar sua saliência; distração pode reduzir a percepção em algumas situações.</p></article>
+          <article class="card attention"><div class="card-icon">😟</div><h3>Emoção</h3><p>Ansiedade, medo e estresse podem alterar a experiência dolorosa por vias centrais e autonômicas.</p></article>
+          <article class="card attention"><div class="card-icon">🧩</div><h3>Contexto</h3><p>Expectativas, experiências anteriores e significado atribuído ao estímulo participam da interpretação.</p></article>
+        </div>
+        <div class="callout warning">
+          <strong>Ponto importante:</strong>
+          <p>“Influência psicológica” não significa que a dor seja falsa. A dor é uma experiência real produzida pelo sistema nervoso e modulada por múltiplos fatores.</p>
+        </div>
+        <label class="done-check"><input type="checkbox" data-complete="atencao"> Marcar módulo como estudado</label>
+      </section>
+
+      <section class="section content-section" id="semaforo" data-module="semaforo">
+        <div class="section-heading">
+          <span class="step">10</span>
+          <div><p class="eyebrow">ATIVIDADE</p><h2>Semáforo Sensorial</h2></div>
+        </div>
+        <p>Use o semáforo como uma ferramenta de raciocínio: <strong>vermelho</strong> = maior percepção/ativação nociceptiva; <strong>amarelo</strong> = modulação dependente de contexto; <strong>verde</strong> = mecanismos inibitórios ou redução da transmissão.</p>
+
+        <div class="traffic-tabs" role="tablist" aria-label="Categorias do semáforo">
+          <button class="traffic-tab active red-tab" data-traffic="red">🔴 Vermelho</button>
+          <button class="traffic-tab yellow-tab" data-traffic="yellow">🟡 Amarelo</button>
+          <button class="traffic-tab green-tab" data-traffic="green">🟢 Verde</button>
+        </div>
+
+        <div class="traffic-panel active" data-panel="red">
+          <h3>🔴 Vermelho — maior percepção da dor</h3>
+          <div class="scenario-grid">
+            <article><p>Uma pessoa sofre uma lesão e há intensa ativação de receptores de dor.</p><strong>Resposta: 🔴 Vermelho</strong></article>
+            <article><p>Uma pessoa sofre um estímulo doloroso e fica extremamente focada nele.</p><strong>Resposta: 🔴 Vermelho — a atenção pode aumentar a percepção da dor.</strong></article>
+            <article><p>Uma pessoa sente dor e fica muito ansiosa e preocupada com o que está acontecendo.</p><strong>Resposta: 🔴 Vermelho — fatores emocionais podem aumentar a percepção da dor.</strong></article>
+          </div>
+        </div>
+
+        <div class="traffic-panel" data-panel="yellow">
+          <h3>🟡 Amarelo — percepção modulada por contexto</h3>
+          <div class="scenario-grid">
+            <article><p>Uma pessoa está sentindo dor, mas começa a conversar e se distrair com outra atividade.</p><strong>Resposta: 🟡 Amarelo — a atenção e o contexto podem modificar a percepção.</strong></article>
+            <article><p>Duas pessoas recebem estímulos semelhantes, mas relatam intensidades diferentes de dor.</p><strong>Resposta: 🟡 Amarelo — a experiência da dor é influenciada por fatores individuais e pelo processamento do sistema nervoso.</strong></article>
+            <article><p>Uma pessoa sente um estímulo doloroso enquanto está em uma situação de muito estresse.</p><strong>Resposta: 🟡 Amarelo — o estado emocional pode influenciar a modulação da dor.</strong></article>
+            <article><p>Uma pessoa recebe um estímulo sensorial e o cérebro interpreta a informação antes de determinar como ela será percebida.</p><strong>Resposta: 🟡 Amarelo — a percepção não depende apenas do estímulo periférico.</strong></article>
+          </div>
+        </div>
+
+        <div class="traffic-panel" data-panel="green">
+          <h3>🟢 Verde — inibição ou redução da transmissão</h3>
+          <div class="scenario-grid">
+            <article><p>Depois de bater a perna, uma pessoa esfrega suavemente o local.</p><strong>Resposta: 🟢 Verde — estímulos táteis podem inibir a transmissão nociceptiva.</strong></article>
+            <article><p>Uma pessoa recebe estimulação tátil em uma região dolorida.</p><strong>Resposta: 🟢 Verde — fibras sensoriais de maior diâmetro podem contribuir para a inibição da transmissão da dor.</strong></article>
+            <article><p>Uma pessoa sente dor e recebe uma estimulação sensorial que ativa mecanismos inibitórios da dor.</p><strong>Resposta: 🟢 Verde — ocorre modulação descendente/inibitória da dor.</strong></article>
+          </div>
+        </div>
+        <label class="done-check"><input type="checkbox" data-complete="semaforo"> Marcar módulo como estudado</label>
+      </section>
+
+      <section class="section content-section" id="clinica" data-module="clinica">
+        <div class="section-heading">
+          <span class="step">11</span>
+          <div><p class="eyebrow">APLICAÇÃO</p><h2>Ligando fisiologia à prática clínica</h2></div>
+        </div>
+        <div class="grid two">
+          <article class="card">
+            <h3>Lesão periférica</h3>
+            <p>Alterações em nervos podem causar perda sensorial, parestesias, dor neuropática ou respostas anormais no território inervado.</p>
+          </article>
+          <article class="card">
+            <h3>Lesão medular</h3>
+            <p>Como diferentes modalidades usam vias distintas, o padrão de perda pode ajudar a localizar a lesão.</p>
+          </article>
+          <article class="card">
+            <h3>Sensibilização</h3>
+            <p>Após inflamação ou estimulação persistente, circuitos nociceptivos podem ficar mais responsivos, favorecendo hiperalgesia e alodinia.</p>
+          </article>
+          <article class="card">
+            <h3>Neuromodulação</h3>
+            <p>Técnicas como estimulação elétrica transcutânea usam princípios de modulação sensorial, embora resposta clínica varie entre pessoas e condições.</p>
+          </article>
+        </div>
+        <div class="callout note">
+          <strong>Uso educacional</strong>
+          <p>Este site é material de estudo de fisiologia e não substitui avaliação ou orientação médica.</p>
+        </div>
+        <label class="done-check"><input type="checkbox" data-complete="clinica"> Marcar módulo como estudado</label>
+      </section>
+
+      <section class="section content-section" id="resumo" data-module="resumo">
+        <div class="section-heading">
+          <span class="step">12</span>
+          <div><p class="eyebrow">REVISÃO</p><h2>Resumo de prova em 12 pontos</h2></div>
+        </div>
+        <div class="summary-list">
+          <div><span>01</span><p>Sensibilidade somática inclui tato, pressão, vibração, temperatura, dor e propriocepção.</p></div>
+          <div><span>02</span><p>Receptores convertem estímulos físicos/químicos em sinais elétricos.</p></div>
+          <div><span>03</span><p>Aβ conduz principalmente toque e pressão.</p></div>
+          <div><span>04</span><p>Aδ participa da dor rápida e mais bem localizada.</p></div>
+          <div><span>05</span><p>Fibras C são lentas, amielínicas e associadas à dor mais difusa/persistente.</p></div>
+          <div><span>06</span><p>Nocicepção é processamento neural; dor é experiência sensorial e emocional.</p></div>
+          <div><span>07</span><p>O corno dorsal é um ponto importante de integração e modulação nociceptiva.</p></div>
+          <div><span>08</span><p>Atividade tátil de fibras Aβ pode aumentar inibição e reduzir transmissão nociceptiva.</p></div>
+          <div><span>09</span><p>Vias ascendentes levam informação para tálamo e várias regiões encefálicas.</p></div>
+          <div><span>10</span><p>Vias descendentes podem inibir ou facilitar circuitos nociceptivos na medula.</p></div>
+          <div><span>11</span><p>Atenção, emoção e contexto podem modificar a percepção dolorosa.</p></div>
+          <div><span>12</span><p>Dor não é medida direta do tamanho da lesão: é resultado de processamento multidimensional.</p></div>
+        </div>
+        <label class="done-check"><input type="checkbox" data-complete="resumo"> Marcar módulo como estudado</label>
+      </section>
+
+      <section class="section content-section" id="flashcards" data-module="flashcards">
+        <div class="section-heading">
+          <span class="step">13</span>
+          <div><p class="eyebrow">MEMORIZAÇÃO</p><h2>Flashcards</h2></div>
+        </div>
+        <p>Clique em cada cartão para revelar a resposta.</p>
+        <div class="flash-grid">
+          <button class="flashcard"><span class="front">Qual fibra está ligada a toque e pressão?</span><span class="back">Aβ (A-beta)</span></button>
+          <button class="flashcard"><span class="front">Qual fibra transmite a “primeira dor”?</span><span class="back">Aδ (A-delta)</span></button>
+          <button class="flashcard"><span class="front">Qual fibra é amielínica e lenta?</span><span class="back">Fibra C</span></button>
+          <button class="flashcard"><span class="front">Onde ocorre importante modulação inicial da nocicepção?</span><span class="back">No corno dorsal da medula espinal.</span></button>
+          <button class="flashcard"><span class="front">Nocicepção e dor são iguais?</span><span class="back">Não. Nocicepção é processamento neural; dor é experiência sensorial e emocional.</span></button>
+          <button class="flashcard"><span class="front">O que o toque pode fazer em uma área dolorida?</span><span class="back">Ativar aferentes de maior diâmetro e favorecer inibição da transmissão nociceptiva.</span></button>
+        </div>
+        <label class="done-check"><input type="checkbox" data-complete="flashcards"> Marcar módulo como estudado</label>
+      </section>
+
+      <section class="section content-section" id="quiz" data-module="quiz">
+        <div class="section-heading">
+          <span class="step">14</span>
+          <div><p class="eyebrow">AUTOAVALIAÇÃO</p><h2>Quiz interativo</h2></div>
+        </div>
+        <div id="quizBox" class="quiz-box"></div>
+        <div class="quiz-footer">
+          <button class="btn secondary" id="restartQuiz">Reiniciar quiz</button>
+          <div class="quiz-score" id="quizScore">0 / 10</div>
+        </div>
+        <label class="done-check"><input type="checkbox" data-complete="quiz"> Marcar módulo como estudado</label>
+      </section>
+
+      <section class="section content-section" id="glossario" data-module="glossario">
+        <div class="section-heading">
+          <span class="step">15</span>
+          <div><p class="eyebrow">TERMOS-CHAVE</p><h2>Glossário rápido</h2></div>
+        </div>
+        <div class="glossary">
+          <details><summary>Nociceptor</summary><p>Terminação sensorial especializada em detectar estímulos potencialmente lesivos.</p></details>
+          <details><summary>Nocicepção</summary><p>Processos neurais de detecção, codificação e transmissão de estímulos nocivos.</p></details>
+          <details><summary>Alodinia</summary><p>Dor provocada por estímulo que normalmente não seria doloroso.</p></details>
+          <details><summary>Hiperalgesia</summary><p>Resposta dolorosa aumentada a um estímulo que normalmente já é doloroso.</p></details>
+          <details><summary>Propriocepção</summary><p>Percepção da posição e do movimento do corpo e dos segmentos corporais.</p></details>
+          <details><summary>Corno dorsal</summary><p>Região posterior da substância cinzenta da medula onde chegam muitas aferências sensoriais, inclusive nociceptivas.</p></details>
+          <details><summary>Interneurônio inibitório</summary><p>Neurônio local que reduz a atividade de outros neurônios no circuito.</p></details>
+          <details><summary>Modulação descendente</summary><p>Controle exercido por centros encefálicos sobre circuitos nociceptivos da medula e tronco encefálico.</p></details>
+        </div>
+        <label class="done-check"><input type="checkbox" data-complete="glossario"> Marcar módulo como estudado</label>
+      </section>
+
+      <section class="section content-section references" id="referencias">
+        <div class="section-heading">
+          <span class="step">↗</span>
+          <div><p class="eyebrow">FONTES</p><h2>Referências e aprofundamento</h2></div>
+        </div>
+        <p>O conteúdo foi estruturado a partir do material da atividade e aprofundado com fontes de fisiologia e neurociência.</p>
+        <ol>
+          <li><a href="https://www.ncbi.nlm.nih.gov/books/NBK547656/" target="_blank" rel="noreferrer">Gadhvi M, Moore MJ, Waseem M. Physiology, Sensory System. StatPearls / NCBI Bookshelf.</a></li>
+          <li><a href="https://www.ncbi.nlm.nih.gov/books/NBK11078/" target="_blank" rel="noreferrer">Purves D et al. The Somatic Sensory System. Neuroscience. NCBI Bookshelf.</a></li>
+          <li><a href="https://www.ncbi.nlm.nih.gov/books/NBK10963/" target="_blank" rel="noreferrer">Purves D et al. The Perception of Pain. Neuroscience. NCBI Bookshelf.</a></li>
+          <li><a href="https://www.ncbi.nlm.nih.gov/books/NBK545194/" target="_blank" rel="noreferrer">Pain Theory. StatPearls / NCBI Bookshelf.</a></li>
+          <li><a href="https://www.ncbi.nlm.nih.gov/books/NBK551522/" target="_blank" rel="noreferrer">Neuroanatomy, Substantia Gelatinosa. StatPearls / NCBI Bookshelf.</a></li>
+          <li><a href="https://www.ncbi.nlm.nih.gov/books/NBK10985/" target="_blank" rel="noreferrer">The Physiological Basis of Pain Modulation. Neuroscience. NCBI Bookshelf.</a></li>
+          <li><a href="https://www.iasp-pain.org/wp-content/uploads/2022/04/revised-definition-flysheet_R2-1-1-1.pdf" target="_blank" rel="noreferrer">International Association for the Study of Pain (IASP). Revised Definition of Pain.</a></li>
+          <li><strong>Referência-base da atividade:</strong> Silverthorn, Fisiologia Humana, 7ª ed., pp. 320–323 (conforme material fornecido pelo grupo).</li>
+        </ol>
+      </section>
+
+      <footer>
+        <div><strong>BIOMED</strong><p>Plataforma de estudo — Sensibilidade Somática e Modulação da Dor</p></div>
+        <a href="#inicio">Voltar ao topo ↑</a>
+      </footer>
+    </main>
+  </div>
+
+  <dialog id="searchDialog">
+    <form method="dialog" class="search-dialog">
+      <div class="search-head">
+        <div><p class="eyebrow">BUSCA RÁPIDA</p><h2>Encontre um assunto</h2></div>
+        <button class="icon-btn" value="cancel" aria-label="Fechar">✕</button>
+      </div>
+      <input id="searchInput" type="search" placeholder="Ex.: Aβ, nocicepção, portão, propriocepção..." autocomplete="off" />
+      <div id="searchResults" class="search-results"></div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
