@@ -47,6 +47,7 @@
         <a href="#processar" data-nav="processar"><span>3</span><div><b>Processar</b><small>nocicepção e dor</small></div></a>
         <a href="#modular" data-nav="modular"><span>4</span><div><b>Modular</b><small>portão e controle descendente</small></div></a>
         <a href="#aplicar" data-nav="aplicar"><span>5</span><div><b>Aplicar</b><small>semáforo e casos</small></div></a>
+        <a href="#laboratorio" data-nav="laboratorio"><span>∞</span><div><b>Treinar</b><small>motor adaptativo</small></div></a>
         <a href="#revisao" data-nav="revisao"><span>✓</span><div><b>Revisar</b><small>flashcards e quiz</small></div></a>
         <a href="#referencias" data-nav="referencias"><span>↗</span><div><b>Fontes</b><small>aprofundamento</small></div></a>
       </nav>
@@ -80,6 +81,11 @@
             <a class="mode-card mode-green" href="#semaforo">
               <span class="mode-icon">🚦</span>
               <div><strong>Treinar Semáforo</strong><small>Casos práticos • 10 min</small></div>
+              <b>→</b>
+            </a>
+            <a class="mode-card mode-orange" href="#laboratorio">
+              <span class="mode-icon">🧠</span>
+              <div><strong>Tutor adaptativo</strong><small>Diagnóstico + perguntas variáveis + simulações</small></div>
               <b>→</b>
             </a>
           </div>
@@ -402,6 +408,10 @@
         </footer>
       </section>
 
+      <section class="adaptive-lab section" id="laboratorio" data-track>
+        <div id="labApp" aria-live="polite"></div>
+      </section>
+
       <section class="review-zone section" id="revisao" data-track>
         <header class="review-header">
           <span class="review-icon">✓</span>
@@ -512,6 +522,7 @@
     </form>
   </dialog>
 
+  <script src="adaptive-engine.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
