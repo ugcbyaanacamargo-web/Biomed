@@ -2,9 +2,9 @@
 
 Plataforma educacional interativa para estudo de fisiologia sensorial, nocicepção e modulação da dor.
 
-## Novo fluxo de aprendizagem
+## Arquitetura de aprendizagem
 
-O conteúdo foi reorganizado em cinco etapas encadeadas:
+O conteúdo segue cinco etapas:
 
 1. **Perceber** — modalidades e receptores.
 2. **Conduzir** — fibras Aβ, Aδ e C e vias ascendentes.
@@ -12,34 +12,67 @@ O conteúdo foi reorganizado em cinco etapas encadeadas:
 4. **Modular** — Teoria do Portão e modulação descendente.
 5. **Aplicar** — Semáforo Sensorial e situações práticas.
 
-Depois o aluno entra em uma área de **revisão ativa** com resumo, flashcards e quiz.
+Depois o aluno entra em uma área de **treino adaptativo** e **revisão ativa**.
 
-## Recursos
+## Laboratório adaptativo
 
-- 6 ilustrações vetoriais próprias em `assets/`
-- navegação guiada em 5 etapas
-- três modos de estudo: completo, revisão e Semáforo
-- progresso salvo no navegador
-- “continuar de onde parei”
-- perguntas rápidas ao final de cada etapa
-- Teoria do Portão interativa
-- Semáforo Sensorial com 10 situações
-- flashcards e quiz com feedback
-- sugestão de revisão espaçada
-- busca interna
-- modo claro/escuro
-- layout responsivo e versão para impressão
+O site agora possui um motor local, sem API paga, que:
+
+- aplica **diagnóstico inicial** de 10 questões intercaladas;
+- mantém um **mapa de domínio por conceito**, em vez de contar apenas páginas concluídas;
+- gera **questões variáveis** combinando assunto, contexto e caso;
+- prioriza automaticamente os **assuntos com menor domínio**;
+- registra **confusões recorrentes** (ex.: Aδ × C, nocicepção × dor);
+- corrige **respostas abertas de 0 a 10** com rubrica por conceitos esperados;
+- mostra exatamente **o que apareceu e o que faltou** na resposta;
+- oferece **3 simulações**:
+  - misturador de modulação da dor;
+  - corrida de condução Aβ/Aδ/C;
+  - perguntas contrafactuais “e se eu mudar só uma variável?”;
+- apresenta **casos em etapas** com retirada progressiva da ajuda:
+  - exemplo resolvido;
+  - ajuda parcial;
+  - resolução independente;
+- mistura tópicos para **prática intercalada**;
+- cria um **relatório do tutor** dizendo o que o aluno deve estudar a seguir;
+- guarda progresso, domínio e histórico no armazenamento local do navegador;
+- funciona sem conta, banco de dados ou servidor.
+
+## Recursos gerais
+
+- 6 ilustrações vetoriais próprias em assets/;
+- navegação guiada em 5 etapas;
+- três modos de estudo;
+- continuar de onde parou;
+- checagens rápidas por etapa;
+- Teoria do Portão interativa;
+- Semáforo Sensorial com 10 situações;
+- flashcards e quiz;
+- revisão distribuída sugerida;
+- busca interna;
+- modo claro/escuro;
+- layout responsivo;
+- versão para impressão.
 
 ## Base pedagógica
 
-O fluxo usa princípios de segmentação e sinalização em aprendizagem multimídia, prática de recuperação e revisão distribuída. As fontes acadêmicas estão ligadas dentro do próprio site e na seção “Referências”.
+A estrutura combina:
 
-## Deploy no Netlify
+- segmentação e sinalização em aprendizagem multimídia;
+- prática de recuperação;
+- prática distribuída;
+- autoexplicação;
+- exemplos resolvidos com retirada progressiva da ajuda;
+- prática intercalada;
+- avaliação formativa com feedback;
+- aprendizagem por domínio.
 
-1. No Netlify: **Add new site → Import an existing project**.
-2. Escolha este repositório.
-3. **Build command:** vazio.
-4. **Publish directory:** `.`
-5. Deploy.
+As referências acadêmicas aparecem na página do site.
 
-É HTML/CSS/JavaScript puro, sem etapa de compilação.
+## Deploy
+
+O projeto é HTML/CSS/JavaScript puro.
+
+Na Vercel ou Netlify, publique a raiz do repositório sem comando de build.
+
+Site atual: https://biomed-sepia.vercel.app
