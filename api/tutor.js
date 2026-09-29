@@ -1,9 +1,31 @@
 import {allowCors,json,readJson} from "./_lib/security.js";
 import {rpc,bearerToken} from "./_lib/biomed-rpc.js";
-import {runZenTutor} from "./_lib/zen-client.js";
+import {runOpenCodeLocalTutor} from "./_lib/opencode-local.js";
 import {normalizeTutorPlan,fallbackTutorPlan,containsUnsafeTutorContent} from "../tutor-schema.js";
 
 const DEFAULT_MODEL="muse-spark-1.3-contributor-free";
+const IS_RAILWAY=Boolean(process.env.RAILWAY_ENVIRONMENT||process.env.BIOMED_RUNTIME==="railway");
+const RAILWAY_TUTOR_URL=String(process.env.TUTOR_RAILWAY_URL||"https://biomed-production-a6c6.up.railway.app/api/tutor");
+
+async function proxyTutorToRailway(req,res){
+  try{
+    const body=await readJson(req);
+    const auth=String(req.headers.authorization||"");
+    const response=await fetch(RAILWAY_TUTOR_URL,{
+      method:"POST",
+      headers:{"Content-Type":"application/json",...(auth?{Authorization:auth}:{})},
+      body:JSON.stringify(body),
+      signal:AbortSignal.timeout(20000)
+    });
+    const text=await response.text();
+    res.statusCode=response.status;
+    res.setHeader("Content-Type",response.headers.get("content-type")||"application/json; charset=utf-8");
+    res.setHeader("Cache-Control","no-store");
+    return res.end(text);
+  }catch(error){
+    return json(res,503,{error:"Tutor em nuvem temporariamente indisponível.",code:"TUTOR_RAILWAY_UNAVAILABLE",browserFallback:"rules",detail:String(error?.message||error).slice(0,500)});
+  }
+}
 
 function redactSensitive(value){
   return String(value||"")
@@ -96,6 +118,7 @@ function maybeParse(content,mode){
 export default async function handler(req,res){
   if(allowCors(req,res))return;
   if(req.method!=="POST")return json(res,405,{error:"Método não permitido"});
+  if(!IS_RAILWAY)return proxyTutorToRailway(req,res);
   const token=bearerToken(req);
   if(!token)return json(res,401,{error:"Sessão ausente"});
   try{
@@ -110,14 +133,14 @@ export default async function handler(req,res){
     if(!apiKey)return json(res,503,{error:"OpenCode Zen não está configurado.",code:"AI_NOT_CONFIGURED",browserFallback:"rules"});
     try{
       const requestStarted=Date.now();
-      const result=await runZenTutor({studentId:student.id||"anon",prompt,model,apiKey});
+      const result=await runOpenCodeLocalTutor({studentId:student.id||"anon",prompt,model,apiKey});
       const parsed=maybeParse(result.content,mode);
-      console.info("biomed_tutor_ok",JSON.stringify({mode,durationMs:result.durationMs||Date.now()-requestStarted,runtime:result.runtime||"direct-zen-api"}));
+      console.info("biomed_tutor_ok",JSON.stringify({mode,durationMs:result.durationMs||Date.now()-requestStarted,runtime:result.runtime||"railway-persistent-opencode"}));
       if(mode==="visual"){
         const plan=parsed&&!containsUnsafeTutorContent(parsed)?parsed:fallbackTutorPlan("A resposta da IA não passou pela validação visual. Continue por este bloco seguro.");
-        return json(res,200,{provider:"opencode",runtime:result.runtime||"direct-zen-api",model:result.model,durationMs:result.durationMs||0,content:"",parsed:plan,plan});
+        return json(res,200,{provider:"opencode",runtime:result.runtime||"railway-persistent-opencode",model:result.model,durationMs:result.durationMs||0,content:"",parsed:plan,plan});
       }
-      return json(res,200,{provider:"opencode",runtime:result.runtime||"direct-zen-api",model:result.model,durationMs:result.durationMs||0,content:result.content,parsed});
+      return json(res,200,{provider:"opencode",runtime:result.runtime||"railway-persistent-opencode",model:result.model,durationMs:result.durationMs||0,content:result.content,parsed});
     }catch(e){
       console.warn("biomed_tutor_fallback",JSON.stringify({mode,code:e?.code||"OPENCODE_RUNTIME_ERROR",durationMs:Number(e?.durationMs||0)}));
       if(mode==="visual"){

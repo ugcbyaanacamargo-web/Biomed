@@ -1,61 +1,59 @@
 # Arquitetura BIOMED
 
-## 1. Responsabilidade de cada camada
+## Responsabilidades
 
 ### Navegador
-`auth.js` autentica. `study-platform.js` é o aplicativo. `learning-components.js` renderiza blocos pedagógicos. `visual-tutor.js` orquestra a experiência do Tutor.
+`auth.js` autentica. `study-platform.js` é o aplicativo. `learning-components.js` renderiza blocos pedagógicos. `visual-tutor.js` mostra uma atividade imediata e aplica o refinamento da IA.
 
-### API
-As rotas `/api/*` validam sessão e fazem a ponte com Supabase e OpenCode Zen. A chave do Zen fica somente no servidor.
+### Vercel
+Hospeda a experiência principal e APIs leves. A rota do Tutor encaminha a solicitação para o runtime persistente do Railway.
 
-### Banco
-Supabase persiste aluno, sessão, eventos, progresso e provas. O navegador não deve manter uma segunda base acadêmica paralela.
+### Railway
+Mantém `opencode serve` vivo em `127.0.0.1`. O processo é aquecido quando o container inicia. Cada interação cria apenas a sessão lógica necessária e usa o modelo; não reinstala nem reinicia o OpenCode.
 
-### IA
-`api/_lib/zen-client.js` chama diretamente o endpoint oficial do OpenCode Zen. Para Muse Spark Contributor Free:
+### Supabase
+Persiste aluno, sessão, eventos, progresso e provas.
 
-`POST https://opencode.ai/zen/v1/responses`
-
-A saída passa pelo contrato do BIOMED antes de virar interface.
-
-## 2. Fluxo do Tutor
+## Fluxo do Tutor
 
 ```
 Aluno
   ↓
-visual-tutor.js mostra atividade local imediata
+atividade local imediata
   ↓
-POST /api/tutor
+POST /api/tutor (Vercel)
   ↓
-carrega perfil pedagógico no Supabase
+Railway /api/tutor
   ↓
-zen-client.js
+perfil pedagógico no Supabase
   ↓
-OpenCode Zen
+OpenCode persistente
   ↓
-tutor-schema.js valida/normaliza
+modelo -free
+  ↓
+tutor-schema.js
   ↓
 interface refina a atividade
 ```
 
-Não há CLI OpenCode, servidor local OpenCode, Vercel Sandbox ou criação/remoção de sessão de agente.
+## Por que não usar Zen direto para o free tier
 
-## 3. Por que a atividade local continua
+O endpoint Zen é público, mas o provedor atualmente rejeita os modelos `-free` quando chamados fora do OpenCode. O runtime foi validado em produção e retornou HTTP 403 com a mensagem de que o free tier só pode ser usado dentro do OpenCode.
 
-Ela evita tela bloqueada e permite estudar quando um provedor de IA está lento. Não grava uma identidade paralela e não substitui a persistência do servidor.
+Portanto, chamadas Zen diretas podem ser usadas futuramente para modelos que permitam isso, mas não são a arquitetura do Tutor gratuito.
 
-## 4. Hospedagem
+## Latência
 
-Vercel hospeda a produção principal. Railway usa o mesmo `server.js` e o mesmo cliente Zen quando for necessário um runtime secundário ou benchmark. A arquitetura deve ser igual nos dois ambientes.
+O ganho vem de manter o OpenCode já iniciado no Railway. Assim, o aluno não paga por instalação, boot de Sandbox ou boot do servidor OpenCode em cada pergunta.
 
-## 5. Banco — estado e destino correto
+O benchmark compara modelos gratuitos usando o mesmo prompt JSON e é habilitado somente de forma controlada por `BIOMED_MODEL_BENCHMARK=1`.
 
-A implementação atual nasceu dentro de um projeto Supabase compartilhado com outro sistema. Isso é dívida técnica comprovada.
+## Banco
 
-**Destino correto:** projeto Supabase exclusivo do BIOMED, com as migrations BIOMED aplicadas e variáveis `SUPABASE_URL` e `SUPABASE_PUBLISHABLE_KEY` configuradas na hospedagem.
+A implementação atual ainda compartilha um projeto Supabase com outro sistema. Isso é dívida técnica.
 
-O código aceita essas variáveis para que a migração não exija nova refatoração. O fallback atual existe somente para preservar a produção até a migração autorizada do projeto dedicado ser concluída.
+Destino correto: projeto Supabase exclusivo do BIOMED, com migrations próprias e `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY` configurados na hospedagem.
 
-## 6. Critério para mudanças futuras
+## Critério de mudança
 
-Uma mudança está correta quando reduz duplicação, preserva uma única fonte de verdade, mantém o Tutor focado em pedagogia e passa `npm test`.
+Uma mudança está correta quando reduz duplicação, mantém uma única fonte de verdade, preserva o Tutor como professor e passa `npm test`.

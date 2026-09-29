@@ -1,4 +1,4 @@
-import {runZenTutor} from "./zen-client.js";
+import {runOpenCodeLocalTutor} from "./opencode-local.js";
 
 const MODELS=[
   "muse-spark-1.3-contributor-free",
@@ -17,7 +17,7 @@ export async function runModelBenchmark(){
   for(const model of MODELS){
     const started=Date.now();
     try{
-      const result=await runZenTutor({studentId:"benchmark",prompt:PROMPT,model,apiKey});
+      const result=await runOpenCodeLocalTutor({studentId:"benchmark",prompt:PROMPT,model,apiKey});
       const row={model,ok:true,validJson:validJson(result.content),latencyMs:Number(result.durationMs||Date.now()-started),runtime:result.runtime,chars:String(result.content||"").length};
       results.push(row);console.info("model_benchmark",JSON.stringify(row));
     }catch(error){
