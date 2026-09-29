@@ -2,6 +2,8 @@
 "use strict";
 const root=document.getElementById("labApp");
 if(!root)return;
+const $=(selector,scope=document)=>scope.querySelector(selector);
+const $=(selector,scope=document)=>[...scope.querySelectorAll(selector)];
 
 const STORAGE="biomed-adaptive-v2";
 const topics={
