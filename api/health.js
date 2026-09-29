@@ -9,7 +9,8 @@ export default async function handler(req,res){
     databaseMode:"supabase-rpc",
     tutorOpenCodeZen:Boolean(process.env.OPENCODE_API_KEY),
     tutorBrowserLLM:true,
-    tutorGitHubOpenCode:"opencode/nemotron-3-ultra-free",
+    tutorGitHubOpenCode:"opencode/muse-spark-1.3-contributor-free",
+    tutorOpenCodeModel:"muse-spark-1.3-contributor-free",
     tutorAI:true
   });
 }
