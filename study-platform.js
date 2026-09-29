@@ -133,11 +133,18 @@ async function tutorPage(){
   view().innerHTML='<div id="visualTutorMount"></div>';
   await mountVisualTutor(document.querySelector("#visualTutorMount"),{prompt:"Conduza a próxima atividade mais útil para mim. Use uma explicação visual curta, depois uma interação. Não faça uma resposta longa em texto simples."});
 }
+function renderLocalPractice(mount,mode){
+  if(!mount)return null;
+  mount.innerHTML='<div class="practice-instant"><div><span class="app-kicker">ATIVIDADE IMEDIATA</span><strong>Você já pode começar.</strong><p>A prática não espera a IA para funcionar. A IA ajusta dificuldade e sequência em segundo plano.</p></div><span class="practice-ai-state">IA ajustando…</span></div><div class="practice-tutor-slot"></div>';
+  return mount.querySelector(".practice-tutor-slot");
+}
 async function practice(){
-  title("Praticar","Perguntas, respostas abertas, simulações e casos ordenados pelo Tutor.");
-  view().innerHTML='<span class="app-kicker">TREINO ADAPTATIVO</span><h1 class="app-title">Treine do jeito que seu desempenho pede.</h1><p class="app-lead">O modo recomendado combina formatos. Você também pode escolher um formato específico.</p><div class="practice-toolbar"><button data-practice="recommended" class="active">Recomendado pela IA</button><button data-practice="questions">Perguntas</button><button data-practice="open">Resposta aberta</button><button data-practice="simulation">Simulação</button><button data-practice="cases">Casos</button></div><div id="practiceMount"></div>';
+  title("Praticar","Perguntas, respostas abertas, simulações e casos sem tela travada.");
+  view().innerHTML='<span class="app-kicker">TREINO ADAPTATIVO</span><h1 class="app-title">Treine agora; a IA adapta enquanto você avança.</h1><p class="app-lead">O modo recomendado combina formatos pelo seu estado atual. Os modos específicos entram imediatamente e continuam funcionando mesmo se a IA estiver ocupada.</p><div class="practice-toolbar"><button data-practice="recommended" class="active">Recomendado pela IA</button><button data-practice="questions">Perguntas</button><button data-practice="open">Resposta aberta</button><button data-practice="simulation">Simulação</button><button data-practice="cases">Casos</button></div><div id="practiceMount"></div>';
   const buttons=[...view().querySelectorAll("[data-practice]")];
+  let practiceSerial=0;
   async function load(mode){
+    const serial=++practiceSerial;
     practiceMode=mode;buttons.forEach(b=>b.classList.toggle("active",b.dataset.practice===mode));
     const prompts={
       recommended:"Monte um treino adaptativo curto alternando pergunta objetiva, explicação visual e outro formato de interação baseado no meu ponto mais fraco.",
@@ -147,17 +154,23 @@ async function practice(){
       cases:"Crie um caso clínico curto em etapas, com uma decisão clicável e uma justificativa escrita."
     };
     trackLearningEvent("practice_started",{mode});
-    await mountVisualTutor(document.querySelector("#practiceMount"),{prompt:prompts[mode],title:"Sessão de prática",contextLabel:"TREINO "+mode.toUpperCase()});
+    const slot=renderLocalPractice(document.querySelector("#practiceMount"),mode);
+    if(serial!==practiceSerial)return;
+    mountVisualTutor(slot,{prompt:prompts[mode],title:"Sessão de prática",contextLabel:"TREINO "+mode.toUpperCase()});
   }
   buttons.forEach(b=>b.addEventListener("click",()=>load(b.dataset.practice)));
-  await load("recommended");
+  load("recommended");
 }
 function examLanding(){
-  title("Provas e simulados","Notas, aprovação e histórico ficam separados da prática.");
+  title("Provas e simulados","Escolha uma avaliação; nenhuma prova começa escondida.");
   const current=profile.learningState?.currentModule||"perceber";
-  view().innerHTML='<span class="app-kicker">AVALIAÇÕES</span><h1 class="app-title">Provas com começo, fim e resultado claro.</h1><p class="app-lead">A prova da etapa tem 10 questões e aprovação em '+PASS_THRESHOLD+'%. O simulado cumulativo mistura todo o curso.</p><div class="exam-toolbar">'+MODULES.map(m=>'<button data-exam-module="'+m.id+'" class="'+(m.id===current?"active":"")+'">'+m.number+'. '+m.title+'</button>').join("")+'<button data-exam-module="cumulative">Simulado cumulativo</button></div><div id="examMount"></div><div class="attempt-table"><div class="attempt-row head"><span>Avaliação</span><span>Nota</span><span>Status</span><span>Data</span></div>'+(profile.examAttempts||[]).slice(0,12).map(a=>'<div class="attempt-row"><span>'+esc(a.moduleId==="cumulative"?"Simulado cumulativo":getModule(a.moduleId).title)+'</span><strong>'+Math.round(a.score)+'%</strong><span>'+(a.passed?"Aprovado ✓":"Revisar")+'</span><span>'+new Date(a.createdAt).toLocaleDateString("pt-BR")+'</span></div>').join("")+'</div>';
-  view().querySelectorAll("[data-exam-module]").forEach(b=>b.addEventListener("click",()=>startExam(b.dataset.examModule)));
-  startExam(current,false);
+  const attempts=profile.examAttempts||[];
+  view().innerHTML='<span class="app-kicker">AVALIAÇÕES</span><h1 class="app-title">Provas com começo, fim e resultado claro.</h1><p class="app-lead">Cada prova da etapa tem 10 questões e aprovação em '+PASS_THRESHOLD+'%. O simulado cumulativo mistura todo o curso.</p>'+
+    '<div class="assessment-choice-grid">'+MODULES.map(m=>{const st=bestAndLatest(attempts,m.id);return '<article class="assessment-choice '+(m.id===current?"current":"")+'"><span class="app-kicker">ETAPA '+m.number+'</span><h3>'+esc(m.title)+'</h3><p>'+esc(m.description)+'</p><div class="assessment-meta"><span>10 questões</span><span>'+(st.latest==null?"Sem tentativa":"Última "+Math.round(st.latest)+"%")+'</span><span>'+(st.passed?"Aprovada ✓":"Meta "+PASS_THRESHOLD+"%")+'</span></div><button type="button" class="app-primary" data-start-exam="'+m.id+'">Começar prova</button></article>'}).join("")+
+    '<article class="assessment-choice cumulative"><span class="app-kicker">SIMULADO CUMULATIVO</span><h3>Integração das 5 etapas</h3><p>Mistura Perceber, Conduzir, Processar, Modular e Aplicar.</p><div class="assessment-meta"><span>10 questões</span><span>Todos os módulos</span><span>Meta '+PASS_THRESHOLD+'%</span></div><button type="button" class="app-primary" data-start-exam="cumulative">Iniciar prova cumulativa</button></article></div>'+
+    '<div id="examMount"></div>'+
+    '<h2 class="section-subtitle">Histórico de avaliações</h2><div class="attempt-table"><div class="attempt-row head"><span>Avaliação</span><span>Nota</span><span>Status</span><span>Data</span></div>'+(attempts.length?attempts.slice(0,12).map(a=>'<div class="attempt-row"><span>'+esc(a.moduleId==="cumulative"?"Simulado cumulativo":getModule(a.moduleId).title)+'</span><strong>'+Math.round(a.score)+'%</strong><span>'+(a.passed?"Aprovado ✓":"Revisar")+'</span><span>'+new Date(a.createdAt).toLocaleDateString("pt-BR")+'</span></div>').join(""):'<div class="attempt-row"><span>Nenhuma avaliação concluída ainda.</span><span>—</span><span>—</span><span>—</span></div>')+'</div>';
+  view().querySelectorAll("[data-start-exam]").forEach(b=>b.addEventListener("click",()=>startExam(b.dataset.startExam)));
 }
 function startExam(moduleId,scroll=true){
   view().querySelectorAll("[data-exam-module]").forEach(b=>b.classList.toggle("active",b.dataset.examModule===moduleId));
@@ -187,8 +200,14 @@ function renderExamResult(result,moduleId){
 }
 function progress(){
   title("Meu progresso","Aulas, domínio e provas no mesmo lugar.");
-  const attempts=profile.examAttempts||[];
-  view().innerHTML='<span class="app-kicker">PROGRESSO REAL</span><h1 class="app-title">'+overallProgress(completed())+'% do curso concluído.</h1><p class="app-lead">Aulas concluídas, desempenho e provas são métricas diferentes. Aqui você vê as três.</p><div class="progress-modules">'+MODULES.map(m=>{const p=moduleProgress(m.id,completed()),ex=bestAndLatest(attempts,m.id);return'<article class="progress-module"><div><strong>'+m.number+'. '+esc(m.title)+'</strong><small style="display:block;color:#627386">'+m.lessons.filter(l=>completed().includes(l.id)).length+'/'+m.lessons.length+' aulas</small></div><div class="track"><i style="width:'+p+'%"></i></div><div><strong>'+p+'%</strong><small style="display:block;color:#627386">Prova '+(ex.latest==null?"—":Math.round(ex.latest)+"%")+'</small></div></article>'}).join("")+'</div>';
+  const attempts=profile.examAttempts||[],stats=profile.student?.stats||{};
+  const answered=Number(stats.questions_answered||0),correct=Number(stats.questions_correct||0);
+  const accuracy=answered?Math.round(correct/answered*100):null;
+  const passedModules=MODULES.filter(m=>bestAndLatest(attempts,m.id).passed).length;
+  view().innerHTML='<span class="app-kicker">PROGRESSO REAL</span><h1 class="app-title">'+overallProgress(completed())+'% do curso concluído.</h1><p class="app-lead">Aulas, desempenho e provas são acompanhados separadamente para mostrar exatamente onde você está.</p>'+
+    '<div class="metric-row"><article class="metric-card"><span>Learning Score</span><strong>'+Math.round(Number(profile.student?.learningScore||0))+'%</strong></article><article class="metric-card"><span>XP</span><strong>'+Math.round(Number(profile.student?.xp||0))+'</strong></article><article class="metric-card"><span>Precisão</span><strong>'+(accuracy==null?"—":accuracy+"%")+'</strong></article><article class="metric-card"><span>Etapas aprovadas</span><strong>'+passedModules+'/5</strong></article></div>'+
+    '<div class="progress-modules">'+MODULES.map(m=>{const p=moduleProgress(m.id,completed()),ex=bestAndLatest(attempts,m.id);return'<article class="progress-module"><div><strong>'+m.number+'. '+esc(m.title)+'</strong><small style="display:block;color:#627386">'+m.lessons.filter(l=>completed().includes(l.id)).length+'/'+m.lessons.length+' aulas</small></div><div class="track"><i style="width:'+p+'%"></i></div><div><strong>'+p+'%</strong><small style="display:block;color:#627386">Prova '+(ex.latest==null?"—":Math.round(ex.latest)+"%")+(ex.passed?" ✓":"")+'</small></div></article>'}).join("")+'</div>'+
+    '<h2 class="section-subtitle">Histórico de avaliações</h2><div class="attempt-table"><div class="attempt-row head"><span>Avaliação</span><span>Nota</span><span>Status</span><span>Data</span></div>'+(attempts.length?attempts.slice(0,10).map(a=>'<div class="attempt-row"><span>'+esc(a.moduleId==="cumulative"?"Simulado cumulativo":getModule(a.moduleId).title)+'</span><strong>'+Math.round(a.score)+'%</strong><span>'+(a.passed?"Aprovado ✓":"Revisar")+'</span><span>'+new Date(a.createdAt).toLocaleDateString("pt-BR")+'</span></div>').join(""):'<div class="attempt-row"><span>Nenhuma prova concluída.</span><span>—</span><span>—</span><span>—</span></div>')+'</div>';
 }
 async function ranking(){
   title("Ranking","Comparação por Learning Score, sem exibir CPF.");
