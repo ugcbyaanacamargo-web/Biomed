@@ -32,6 +32,7 @@ jobs:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         with:
           model: opencode/nemotron-3.5-lightning-free
+          agent: tutor
           share: false
           prompt: |
             Você é o Tutor BIOMED.
