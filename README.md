@@ -9,8 +9,8 @@ Plataforma educacional para sensibilidade somática, nocicepção e modulação 
 - **Cadastro por CPF:** ativo; CPF bruto não é armazenado.
 - **Ranking global:** ativo pelo banco persistente.
 - **Tutor IA no navegador:** ativo com WebLLM + Qwen, sem API.
-- **OpenCode no GitHub:** ativo com Ollama + Qwen local no próprio runner, sem API externa.
-- **OpenCode Zen:** opcional; usado somente se uma chave Zen for configurada.
+- **OpenCode no GitHub:** configurado para **Nemotron 3 Ultra Free via OpenCode Zen**.
+- **OpenCode Zen:** requer `OPENCODE_API_KEY` como secret privado no GitHub Actions/Vercel.
 
 ## Fluxo do aluno
 
@@ -46,9 +46,9 @@ O chat isolado não aumenta a posição no ranking.
 
 O chat possui três camadas:
 
-### 1. OpenCode Zen opcional
+### 1. OpenCode Zen — modelo principal
 
-Se `OPENCODE_API_KEY` estiver configurado, a função `/api/tutor` tenta os modelos gratuitos atuais do OpenCode Zen.
+O modelo principal é **Nemotron 3 Ultra Free** (`nemotron-3-ultra-free`). A função `/api/tutor` o tenta primeiro quando `OPENCODE_API_KEY` está configurado.
 
 ### 2. WebLLM local no navegador
 
@@ -66,11 +66,11 @@ O workflow:
 
 `.github/workflows/opencode-tutor.yml`
 
-instala **Ollama**, baixa **Qwen2.5 3B** no runner e executa:
+instala o **OpenCode** no runner e executa:
 
-`opencode run --model ollama/qwen2.5:3b --agent tutor`
+`opencode run --model opencode/nemotron-3-ultra-free --agent tutor`
 
-Portanto o OpenCode do GitHub não depende de OpenCode Zen, Vercel AI Gateway ou chave de API.
+O workflow não instala mais Ollama nem baixa Qwen. Ele usa o **Nemotron 3 Ultra Free via OpenCode Zen** e requer o secret `OPENCODE_API_KEY`.
 
 O agente `tutor` é somente leitura:
 
