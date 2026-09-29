@@ -107,7 +107,7 @@ export default async function handler(req,res){
     const prompt=buildPrompt(systemPrompt(profile,mode),messages);
     const apiKey=String(process.env.OPENCODE_API_KEY||"").trim();
     const model=String(process.env.OPENCODE_MODEL||DEFAULT_MODEL).trim()||DEFAULT_MODEL;
-    if(!apiKey)return json(res,503,{error:"OpenCode Zen não está configurado.",code:"AI_NOT_CONFIGURED",browserFallback:"webllm"});
+    if(!apiKey)return json(res,503,{error:"OpenCode Zen não está configurado.",code:"AI_NOT_CONFIGURED",browserFallback:"rules"});
     try{
       const result=await runOpenCodeTutor({studentId:student.id||"anon",prompt,model,apiKey});
       const parsed=maybeParse(result.content,mode);
@@ -121,7 +121,7 @@ export default async function handler(req,res){
         const plan=fallbackTutorPlan("O Tutor IA está temporariamente indisponível. O BIOMED manteve uma atividade segura para você continuar.");
         return json(res,200,{provider:"fallback",runtime:"local-plan",model:"BIOMED",content:"",parsed:plan,plan});
       }
-      return json(res,503,{error:"Tutor OpenCode temporariamente indisponível.",code:"OPENCODE_RUNTIME_ERROR",browserFallback:"webllm",detail:String(e.message||e).slice(0,900)});
+      return json(res,503,{error:"Tutor OpenCode temporariamente indisponível.",code:"OPENCODE_RUNTIME_ERROR",browserFallback:"rules",detail:String(e.message||e).slice(0,900)});
     }
   }catch(e){
     const msg=String(e.message||"Erro no tutor");
