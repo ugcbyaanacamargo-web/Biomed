@@ -11,20 +11,20 @@ on:
     types: [opened]
 
 permissions:
-  id-token: write
   contents: read
   actions: read
   issues: read
+  models: read
 
 jobs:
   tutor:
     if: github.event_name == 'workflow_dispatch' || startsWith(github.event.issue.title, '[BIOMED TUTOR]')
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
       contents: read
       actions: read
       issues: read
+      models: read
 
     steps:
       - name: Checkout somente leitura
@@ -33,32 +33,23 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Obter credencial OIDC efêmera do GitHub
-        shell: bash
-        run: |
-          RESPONSE="$(curl -fsS             -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN"             "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=biomed-opencode")"
-          TOKEN="$(printf '%s' "$RESPONSE" | jq -r '.value')"
-          test -n "$TOKEN"
-          test "$TOKEN" != "null"
-          echo "::add-mask::$TOKEN"
-          echo "BIOMED_PROXY_TOKEN=$TOKEN" >> "$GITHUB_ENV"
-
       - name: Instalar OpenCode
         shell: bash
         run: |
           curl -fsSL https://opencode.ai/install | bash
           echo "$HOME/.opencode/bin" >> "$GITHUB_PATH"
 
-      - name: Executar Tutor OpenCode sem acesso de escrita
+      - name: Executar Tutor OpenCode com GitHub Models Free
         shell: bash
         env:
+          GITHUB_MODELS_TOKEN: ${{ github.token }}
           PROMPT: ${{ github.event_name == 'workflow_dispatch' && inputs.prompt || github.event.issue.body }}
         run: |
-          opencode run             --model biomed-free/biomed-tutor             --agent tutor             --format json             "$PROMPT" | tee opencode-output.ndjson
+          opencode run             --model github-models/openai/gpt-4.1-mini             --agent tutor             --format json             "$PROMPT" | tee opencode-output.ndjson
 
       - name: Confirmar que o tutor respondeu
         shell: bash
         run: |
           test -s opencode-output.ndjson
           grep -q '"type"' opencode-output.ndjson
-          echo "OpenCode Tutor executado com sucesso em modo somente leitura."
+          echo "OpenCode Tutor executado com sucesso usando GitHub Models em modo somente leitura."
