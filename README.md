@@ -1,12 +1,12 @@
 # BIOMED — Plataforma de Estudo Guiado
 
-BIOMED ensina fisiologia sensorial, nocicepção, dor e modulação da dor por uma trilha curta e progressiva:
+BIOMED ensina fisiologia sensorial, nocicepção, dor e modulação da dor por uma trilha progressiva:
 
 **Perceber → Conduzir → Processar → Modular → Aplicar**
 
-## Arquitetura atual
+## Uma única experiência do aluno
 
-O projeto possui **um único aplicativo do aluno**. Após autenticar, o aluno entra no painel guiado com:
+Após autenticar, o aluno entra no mesmo aplicativo guiado:
 
 - Início
 - Minha trilha
@@ -17,43 +17,43 @@ O projeto possui **um único aplicativo do aluno**. Após autenticar, o aluno en
 - Ranking
 - Biblioteca / Revisão
 
-O estado acadêmico fica no Supabase. A interface principal está em `study-platform.js`.
+A interface principal está em `study-platform.js`. Não existe um segundo painel legado por baixo dela.
 
 ## Tutor IA
 
 O Tutor é um **professor adaptativo**, não um agente de programação.
 
-Fluxo:
+Os modelos gratuitos do OpenCode aceitam uso apenas de dentro do OpenCode. Por isso o runtime correto é:
 
 ```
-aluno → /api/tutor → OpenCode Zen API → modelo → validação BIOMED → componente pedagógico
+aluno
+  ↓
+Vercel /api/tutor
+  ↓
+proxy curto
+  ↓
+Railway — OpenCode persistente e já aquecido
+  ↓
+modelo gratuito OpenCode
+  ↓
+validação BIOMED
+  ↓
+atividade visual
 ```
 
-O servidor chama o Zen diretamente. Não existe OpenCode CLI, `opencode serve`, sessão de agente ou Vercel Sandbox no caminho da resposta.
+O OpenCode é iniciado **uma vez por container Railway**, não uma vez por pergunta. Não existe Vercel Sandbox no caminho do Tutor.
 
-A tela mostra uma atividade pedagógica segura imediatamente e substitui/refina o conteúdo quando a resposta da IA chega.
+A tela mostra uma atividade pedagógica segura imediatamente; a IA refina essa atividade quando responde.
 
-Modelo padrão:
+## Segurança
 
-`muse-spark-1.3-contributor-free`
-
-## Persistência
-
-Tabelas centrais:
-
-- `biomed_students`
-- `biomed_sessions`
-- `biomed_events`
-- `biomed_learning_state`
-- `biomed_exam_attempts`
-- `biomed_private_config`
-
-O CPF original não é enviado ao Tutor IA.
+O agente `biomed-tutor` possui permissões de ferramentas negadas. Ele não edita arquivos, não usa terminal e não recebe CPF, tokens ou segredos.
 
 ## Hospedagem
 
-- **Vercel:** produção principal — https://biomed-sepia.vercel.app
-- **Railway:** runtime secundário/benchmark do mesmo código, sem uma segunda arquitetura de IA.
+- **Vercel:** site principal e APIs leves.
+- **Railway:** runtime persistente do OpenCode para o Tutor.
+- **Supabase:** progresso, sessões, avaliações e eventos.
 
 ## Testes
 
@@ -61,4 +61,4 @@ O CPF original não é enviado ao Tutor IA.
 npm test
 ```
 
-Consulte `AGENTS.md` e `docs/architecture.md` antes de alterar a arquitetura.
+Leia `AGENTS.md` e `docs/architecture.md` antes de alterar a arquitetura.

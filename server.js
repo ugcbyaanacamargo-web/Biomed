@@ -12,7 +12,7 @@ import profile from "./api/profile.js";
 import ranking from "./api/ranking.js";
 import runtimeConfig from "./api/runtime-config.js";
 import tutor from "./api/tutor.js";
-import {runModelBenchmark} from "./api/_lib/model-benchmark.js";
+import {runModelBenchmark} from "./api/_lib/model-benchmark.js";\nimport {warmOpenCodeLocal} from "./api/_lib/opencode-local.js";
 
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
 const PORT=Number(process.env.PORT||3000);
@@ -93,9 +93,21 @@ const server=http.createServer(async(req,res)=>{
 
 server.listen(PORT,"0.0.0.0",()=>{
   console.info("biomed_server_ready",JSON.stringify({port:PORT,runtime:"railway-node"}));
-  if(process.env.BIOMED_MODEL_BENCHMARK==="1"){
-    runModelBenchmark().catch(error=>console.error("model_benchmark_crash",String(error?.message||error)));
-  }
+  void (async()=>{
+    const apiKey=String(process.env.OPENCODE_API_KEY||"").trim();
+    if(!apiKey){console.warn("opencode_warmup_skipped","OPENCODE_API_KEY ausente");return}
+    try{
+      const started=Date.now();
+      await warmOpenCodeLocal(apiKey);
+      console.info("opencode_warmup_ok",JSON.stringify({durationMs:Date.now()-started,runtime:"railway-persistent-opencode"}));
+    }catch(error){
+      console.error("opencode_warmup_failed",String(error?.message||error).slice(0,500));
+      return;
+    }
+    if(process.env.BIOMED_MODEL_BENCHMARK==="1"){
+      runModelBenchmark().catch(error=>console.error("model_benchmark_crash",String(error?.message||error)));
+    }
+  })();
 });
 
 for(const signal of ["SIGTERM","SIGINT"]){
