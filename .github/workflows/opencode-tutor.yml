@@ -7,6 +7,10 @@ on:
         description: "Pergunta pedagógica para testar o tutor"
         required: true
         type: string
+  push:
+    branches: [main]
+    paths:
+      - ".opencode-smoke-test"
 
 permissions:
   contents: read
@@ -19,6 +23,7 @@ jobs:
       id-token: write
       contents: read
       actions: read
+
     steps:
       - name: Checkout somente leitura
         uses: actions/checkout@v6
@@ -26,12 +31,22 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Executar OpenCode sem permissão de escrita
+      - name: Obter credencial OIDC efêmera do GitHub
+        shell: bash
+        run: |
+          RESPONSE="$(curl -fsS             -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN"             "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=biomed-opencode")"
+          TOKEN="$(printf '%s' "$RESPONSE" | jq -r '.value')"
+          test -n "$TOKEN"
+          test "$TOKEN" != "null"
+          echo "::add-mask::$TOKEN"
+          echo "BIOMED_PROXY_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+
+      - name: Executar OpenCode Tutor gratuito
         uses: anomalyco/opencode/github@latest
         env:
-          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          BIOMED_PROXY_TOKEN: ${{ env.BIOMED_PROXY_TOKEN }}
         with:
-          model: opencode/nemotron-3.5-lightning-free
+          model: biomed-free/biomed-tutor
           agent: tutor
           share: false
           prompt: |
@@ -41,5 +56,6 @@ jobs:
             Não altere arquivos, branches, issues, pull requests ou configurações.
             Não execute tarefas administrativas.
             Responda apenas como tutor educacional.
-            Pergunta recebida:
-            ${{ inputs.prompt }}
+
+            Solicitação:
+            ${{ inputs.prompt || 'Teste de funcionamento: explique em três frases a diferença entre nocicepção e dor e finalize com uma pergunta ao aluno.' }}
