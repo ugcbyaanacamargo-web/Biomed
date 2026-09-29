@@ -257,21 +257,9 @@ async function sendTutor(e){
       }
     }
 
-    if(!data&&window.BiomedLocalLLM?.supported()){
-      $("#tutorStatus").classList.add("online");
-      $("#tutorStatus span").textContent=window.BiomedLocalLLM.ready()
-        ?"IA local no navegador • "+window.BiomedLocalLLM.model
-        :"Preparando IA local gratuita...";
-      data=await window.BiomedLocalLLM.chat({
-        mode,
-        messages:tutorMessages,
-        student,
-        onProgress:(progress)=>{
-          const p=$("p",loading);if(p)p.textContent=progress;
-          $("#tutorStatus span").textContent="IA local • "+progress;
-        }
-      });
-    }
+    // Não iniciar WebLLM automaticamente como fallback.
+    // O modelo local usa WebGPU e centenas de MB de cache; se o servidor falhar,
+    // o Tutor cai imediatamente para o motor local leve e mantém o navegador responsivo.
 
     if(!data){
       data={provider:"rules",model:"motor local BIOMED",content:localTutor(text,mode),parsed:null};
