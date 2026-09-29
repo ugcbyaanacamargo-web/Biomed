@@ -8,10 +8,10 @@ export default async function handler(req,res){
     database:Boolean(BIOMED_DB.configured),
     databaseMode:"supabase-rpc",
     tutorOpenCodeZen:Boolean(process.env.OPENCODE_API_KEY),
-    tutorBrowserLLM:true,
-    tutorGitHubOpenCode:"opencode/muse-spark-1.3-contributor-free",
+    tutorOpenCodeRuntime:"vercel-sandbox",
     tutorOpenCodeModel:"muse-spark-1.3-contributor-free",
+    tutorGitHubOpenCode:"opencode/muse-spark-1.3-contributor-free",
+    tutorBrowserLLM:true,
     tutorAI:true
   });
 }
-// redeploy env refresh
