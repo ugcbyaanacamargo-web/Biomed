@@ -1,27 +1,15 @@
-import {allowCors,json,verifySession} from "./_lib/security.js";
-import {dbConfigured,topStudents} from "./_lib/store.js";
-
-function maskName(name){
-  const p=String(name||"Aluno").trim().split(/\s+/).filter(Boolean);
-  return p.length>1?p[0]+" "+p[p.length-1][0]+".":p[0];
-}
+import {allowCors,json} from "./_lib/security.js";
+import {rpc,bearerToken} from "./_lib/biomed-rpc.js";
 
 export default async function handler(req,res){
   if(allowCors(req,res))return;
   if(req.method!=="GET")return json(res,405,{error:"Método não permitido"});
-  if(!dbConfigured())return json(res,503,{error:"Banco persistente ainda não configurado",code:"DB_NOT_CONFIGURED"});
+  const token=bearerToken(req);
+  if(!token)return json(res,401,{error:"Sessão ausente"});
   try{
-    verifySession(req);
-    const rows=await topStudents(50);
-    const ranking=(rows||[]).map((r,i)=>({
-      position:i+1,
-      name:maskName(r.name),
-      level:r.level||"bronze",
-      learningScore:Number(r.learning_score||0),
-      xp:Number(r.xp||0)
-    }));
-    return json(res,200,{ranking});
+    const data=await rpc("biomed_ranking",{p_token:token,p_limit:50});
+    return json(res,200,data);
   }catch(e){
-    return json(res,401,{error:e.message||"Sessão inválida"});
+    return json(res,401,{error:"Sessão inválida ou expirada"});
   }
 }
