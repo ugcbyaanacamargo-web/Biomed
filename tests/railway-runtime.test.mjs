@@ -18,6 +18,7 @@ test("Railway Tutor uses local persistent OpenCode instead of Vercel Sandbox",()
   assert.match(runtime,/RAILWAY_ENVIRONMENT/);
   assert.match(runtime,/opencode-local/);
   assert.match(local,/railway-persistent-opencode/);
+  assert.ok(local.includes("node_modules/.bin/"));
   assert.match(local,/spawn\(BIN/);
   assert.match(local,/\["serve","--hostname"/);
   assert.match(local,/DEADLINE_MS=12000/);
