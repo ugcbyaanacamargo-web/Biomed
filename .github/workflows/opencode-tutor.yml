@@ -14,18 +14,16 @@ permissions:
   contents: read
   actions: read
   issues: read
-  models: read
 
 jobs:
   tutor:
     if: github.event_name == 'workflow_dispatch' || startsWith(github.event.issue.title, '[BIOMED TUTOR]')
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 8
     permissions:
       contents: read
       actions: read
       issues: read
-      models: read
 
     steps:
       - name: Checkout somente leitura
@@ -34,13 +32,27 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Validar GitHub Models gratuito
+      - name: Instalar e iniciar Ollama
         shell: bash
-        env:
-          GITHUB_MODELS_TOKEN: ${{ github.token }}
         run: |
-          curl --fail-with-body --silent --show-error --max-time 30             https://models.github.ai/inference/chat/completions             -H "Authorization: Bearer $GITHUB_MODELS_TOKEN"             -H "Content-Type: application/json"             -d '{"model":"openai/gpt-4.1-mini","messages":[{"role":"user","content":"Responda apenas: BIOMED_MODELS_OK"}],"max_tokens":20}'             | tee github-models-smoke.json
-          grep -q 'BIOMED_MODELS_OK' github-models-smoke.json
+          curl -fsSL https://ollama.com/install.sh | sh
+          nohup ollama serve > /tmp/ollama.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:11434/api/tags >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:11434/api/tags >/dev/null
+
+      - name: Baixar Qwen para o runner
+        shell: bash
+        run: |
+          ollama pull qwen2.5:1.5b
+          ollama list
+          curl -fsS http://127.0.0.1:11434/api/generate             -H "Content-Type: application/json"             -d '{"model":"qwen2.5:1.5b","prompt":"Responda somente BIOMED_OK","stream":false,"options":{"num_predict":20}}'             | tee /tmp/ollama-smoke.json
+          test -s /tmp/ollama-smoke.json
+          grep -q 'BIOMED_OK' /tmp/ollama-smoke.json
 
       - name: Instalar OpenCode
         shell: bash
@@ -48,17 +60,16 @@ jobs:
           curl -fsSL https://opencode.ai/install | bash
           echo "$HOME/.opencode/bin" >> "$GITHUB_PATH"
 
-      - name: Executar Tutor OpenCode com GitHub Models Free
+      - name: Executar Tutor OpenCode local
         shell: bash
         env:
-          GITHUB_MODELS_TOKEN: ${{ github.token }}
           PROMPT: ${{ github.event_name == 'workflow_dispatch' && inputs.prompt || github.event.issue.body }}
         run: |
-          timeout 100s opencode run             --model github-models/openai/gpt-4.1-mini             --agent tutor             --format json             "$PROMPT" | tee opencode-output.ndjson
+          timeout 150s opencode run             --model ollama/qwen2.5:1.5b             --agent tutor             --format json             "$PROMPT" | tee opencode-output.ndjson
 
-      - name: Confirmar que o tutor respondeu
+      - name: Validar resposta
         shell: bash
         run: |
           test -s opencode-output.ndjson
           grep -q '"type"' opencode-output.ndjson
-          echo "OpenCode Tutor executado com sucesso usando GitHub Models em modo somente leitura."
+          echo "OpenCode Tutor executado com Qwen local. Nenhuma API externa foi usada."
