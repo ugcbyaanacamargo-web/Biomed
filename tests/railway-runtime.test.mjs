@@ -21,7 +21,9 @@ test("Railway Tutor uses local persistent OpenCode instead of Vercel Sandbox",()
   assert.ok(local.includes("node_modules/.bin/"));
   assert.match(local,/spawn\(BIN/);
   assert.match(local,/\["serve","--hostname"/);
-  assert.match(local,/DEADLINE_MS=12000/);
+  assert.ok(local.includes("OPENCODE_DEADLINE_MS"));
+  assert.ok(local.includes("Math.min(45000"));
+  assert.ok(local.includes("12000"));
 });
 
 test("OpenCode binary is installed as an application dependency",()=>{
