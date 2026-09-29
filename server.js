@@ -12,7 +12,8 @@ import profile from "./api/profile.js";
 import ranking from "./api/ranking.js";
 import runtimeConfig from "./api/runtime-config.js";
 import tutor from "./api/tutor.js";
-import {runModelBenchmark} from "./api/_lib/model-benchmark.js";\nimport {warmOpenCodeLocal} from "./api/_lib/opencode-local.js";
+import {runModelBenchmark} from "./api/_lib/model-benchmark.js";
+import {warmOpenCodeLocal} from "./api/_lib/opencode-local.js";
 
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
 const PORT=Number(process.env.PORT||3000);
