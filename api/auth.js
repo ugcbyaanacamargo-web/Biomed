@@ -1,25 +1,16 @@
-import {allowCors,json,readJson,validCPF,cpfHash,cleanName,signSession,publicStudent} from "./_lib/security.js";
-import {dbConfigured,findByCpfHash,createStudent,updateStudent} from "./_lib/store.js";
+import {allowCors,json,readJson} from "./_lib/security.js";
+import {rpc} from "./_lib/biomed-rpc.js";
 
 export default async function handler(req,res){
   if(allowCors(req,res))return;
   if(req.method!=="POST")return json(res,405,{error:"Método não permitido"});
-  if(!dbConfigured())return json(res,503,{error:"Banco persistente ainda não configurado",code:"DB_NOT_CONFIGURED"});
   try{
     const body=await readJson(req);
-    const cpf=String(body.cpf||"");
-    if(!validCPF(cpf))return json(res,400,{error:"CPF inválido"});
-    const hash=cpfHash(cpf);
-    let row=await findByCpfHash(hash);
-    if(!row){
-      const name=cleanName(body.name);
-      if(!name)return json(res,200,{newStudent:true});
-      row=await createStudent({cpfHash:hash,name});
-    }else{
-      await updateStudent(row.id,{last_seen_at:new Date().toISOString()});
-    }
-    return json(res,200,{newStudent:false,token:signSession(row.id),student:publicStudent(row)});
+    const data=await rpc("biomed_auth",{p_cpf:String(body.cpf||""),p_name:body.name?String(body.name):null});
+    return json(res,200,data);
   }catch(e){
-    return json(res,500,{error:"Não foi possível concluir o acesso",detail:process.env.NODE_ENV==="development"?e.message:undefined});
+    const msg=String(e.message||"Erro de acesso");
+    const status=/CPF inválido|Nome inválido/.test(msg)?400:500;
+    return json(res,status,{error:msg});
   }
 }
