@@ -19,7 +19,7 @@ jobs:
   tutor:
     if: github.event_name == 'workflow_dispatch' || startsWith(github.event.issue.title, '[BIOMED TUTOR]')
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     permissions:
       contents: read
       actions: read
@@ -48,9 +48,9 @@ jobs:
       - name: Baixar Qwen para o runner
         shell: bash
         run: |
-          ollama pull qwen2.5:1.5b
+          ollama pull qwen2.5:3b
           ollama list
-          curl -fsS http://127.0.0.1:11434/api/generate             -H "Content-Type: application/json"             -d '{"model":"qwen2.5:1.5b","prompt":"Responda somente BIOMED_OK","stream":false,"options":{"num_predict":20}}'             | tee /tmp/ollama-smoke.json
+          curl -fsS http://127.0.0.1:11434/api/generate             -H "Content-Type: application/json"             -d '{"model":"qwen2.5:3b","prompt":"Responda somente BIOMED_OK","stream":false,"options":{"num_predict":20}}'             | tee /tmp/ollama-smoke.json
           test -s /tmp/ollama-smoke.json
           grep -q 'BIOMED_OK' /tmp/ollama-smoke.json
 
@@ -65,7 +65,7 @@ jobs:
         env:
           PROMPT: ${{ github.event_name == 'workflow_dispatch' && inputs.prompt || github.event.issue.body }}
         run: |
-          timeout 150s opencode run             --model ollama/qwen2.5:1.5b             --agent tutor             --format json             "$PROMPT" | tee opencode-output.ndjson
+          timeout 150s opencode run             --model ollama/qwen2.5:3b             --agent tutor             --format json             "$PROMPT" | tee opencode-output.ndjson
 
       - name: Validar resposta
         shell: bash
