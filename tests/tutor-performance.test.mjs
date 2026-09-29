@@ -7,7 +7,7 @@ const visual=await readFile(new URL("../visual-tutor.js",import.meta.url),"utf8"
 
 test("Tutor runtime uses a shared persistent OpenCode server instead of opencode run per request",()=>{
   assert.match(runtime,/biomed-tutor-runtime-v2/);
-  assert.match(runtime,/opencode serve/);
+  assert.match(runtime,/args:\["serve","--hostname"/);
   assert.match(runtime,/detached:\s*true/);
   assert.doesNotMatch(runtime,/args:\s*\[\s*"--pure"\s*,\s*"run"/s);
 });
