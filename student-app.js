@@ -248,7 +248,8 @@ async function sendTutor(e){
     if(serverMode&&session?.token){
       const data=await api("/api/tutor",{method:"POST",body:JSON.stringify({mode,messages:tutorMessages})});
       reply=data.content;parsed=data.parsed;model=data.model;
-      $("#tutorStatus").classList.add("online");$("#tutorStatus span").textContent="OpenCode Zen • "+model;
+      const providerLabel=data.provider==="opencode"?"OpenCode Zen":data.provider==="vercel-free"?"Vercel AI Free":"Tutor IA";
+      $("#tutorStatus").classList.add("online");$("#tutorStatus span").textContent=providerLabel+" • "+model;
     }else reply=localTutor(text,mode);
     loading.remove();
     if(mode==="grade"&&parsed){
