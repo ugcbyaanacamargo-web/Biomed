@@ -2,9 +2,7 @@ import {allowCors,json,readJson} from "./_lib/security.js";
 import {rpc,bearerToken} from "./_lib/biomed-rpc.js";
 
 const OPENCODE_ENDPOINT="https://opencode.ai/zen/v1/chat/completions";
-const VERCEL_ENDPOINT="https://ai-gateway.vercel.sh/v1/chat/completions";
-const OPENCODE_MODELS=["nemotron-3-ultra-free","mimo-v2.5-free","deepseek-v4-flash-free","ling-3.0-tiny-free"];
-const VERCEL_FREE_MODELS=["inclusionai/ling-3.0-flash-vl"];
+const OPENCODE_MODELS=["nemotron-3.5-lightning-free","nemotron-3-ultra-free","mimo-v2.6-flash-free","mimo-v2.5-free","ling-3.0-flash-fin-free","big-pickle","space-bunny-free"];
 
 function safeMessages(messages){
   if(!Array.isArray(messages))return [];
@@ -101,21 +99,11 @@ export default async function handler(req,res){
       }
     }
 
-    const oidc=String(process.env.VERCEL_OIDC_TOKEN||req.headers["x-vercel-oidc-token"]||"").trim();
-    if(oidc){
-      for(const model of VERCEL_FREE_MODELS){
-        try{
-          const content=await callCompatible(VERCEL_ENDPOINT,oidc,model,messages,system);
-          return json(res,200,{provider:"vercel-free",model,content,parsed:maybeParse(content,mode)});
-        }catch(e){errors.push("Vercel "+model+": "+e.message)}
-      }
-    }
-
     return json(res,503,{
       error:"Tutor generativo ainda não tem um provedor autenticado.",
       code:"AI_NOT_CONFIGURED",
       openCodeConfigured:Boolean(openKey),
-      vercelOidcAvailable:Boolean(oidc),
+      browserFallback:"webllm",
       detail:errors.slice(-3)
     });
   }catch(e){
