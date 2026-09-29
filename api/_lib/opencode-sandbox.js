@@ -41,6 +41,14 @@ export async function runOpenCodeTutor({studentId,prompt,model=DEFAULT_MODEL,api
     onCreate:async sandbox=>setupSandbox(sandbox)
   });
 
+  const ensure=await sbx.runCommand({
+    cmd:"bash",
+    args:["-lc","mkdir -p /tmp/biomed-tutor; test -x /home/vercel-sandbox/.opencode/bin/opencode || curl -fsSL https://opencode.ai/install | bash"]
+  });
+  if(ensure.exitCode!==0){
+    throw new Error("Falha ao preparar OpenCode: "+(await ensure.stderr()).slice(-500));
+  }
+
   const result=await sbx.runCommand({
     cmd:OPENCODE_BIN,
     args:[
