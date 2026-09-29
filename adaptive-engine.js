@@ -30,6 +30,11 @@ let state=load();
 let currentQuestion=null;
 let diagnostic={active:false,items:[],index:0,correct:0};
 let caseSession=null;
+let simTouched=new Set();
+
+function emitActivity(type,payload={},topic=null){
+  window.dispatchEvent(new CustomEvent("biomed:activity",{detail:{type,payload,topic,eventKey:type+"-"+Date.now()+"-"+Math.random().toString(36).slice(2)}}));
+}
 
 function load(){
   try{
@@ -275,7 +280,7 @@ function startDiagnostic(){
 function renderDiagnosticQuestion(){
   const p=panel("diagnostico");
   if(diagnostic.index>=diagnostic.items.length){
-    diagnostic.active=false;state.diagnosticDone=true;state.diagnosticScore=Math.round(diagnostic.correct/diagnostic.items.length*100);save();renderDiagnostic();return;
+    diagnostic.active=false;state.diagnosticDone=true;state.diagnosticScore=Math.round(diagnostic.correct/diagnostic.items.length*100);emitActivity("diagnostic",{score:state.diagnosticScore});save();renderDiagnostic();return;
   }
   const q=diagnostic.items[diagnostic.index];
   p.innerHTML='<div class="lab-question-card"><div class="lab-qtop"><span>Diagnóstico '+(diagnostic.index+1)+' / '+diagnostic.items.length+'</span><span>'+topics[q.topic].label+'</span></div><h3>'+q.stem+'</h3><div class="lab-options">'+q.options.map((o,i)=>'<button data-diag="'+i+'">'+o+'</button>').join("")+'</div><div class="lab-meter"><i style="width:'+((diagnostic.index)/diagnostic.items.length*100)+'%"></i></div></div>';
@@ -319,6 +324,7 @@ function answerTraining(index){
   buttons.forEach((b,i)=>{b.disabled=true;if(i===q.correctIndex)b.classList.add("correct");else if(i===index)b.classList.add("wrong")});
   updateMastery(q.topic,correct,q.difficulty,correct?null:q.misconception);
   log({mode:"adaptive",topic:q.topic,correct,stem:q.stem});
+  emitActivity("question",{correct,mastery:state.mastery[q.topic]?.score??null},q.topic);
   save();
   $("#trainFeedback",mount).innerHTML='<strong>'+(correct?"✓ Correto":"✕ Ainda não")+'</strong><p>'+q.explanation+'</p><small>'+(!correct?"Esse tipo de erro aumentou a prioridade deste assunto nas próximas questões.":"O sistema registrou o acerto e poderá aumentar a dificuldade.")+'</small>';
   $("#nextAdaptive",mount).classList.remove("hidden");
@@ -339,6 +345,7 @@ function gradeCurrentOpen(){
   const correct=g.score>=7;
   updateMastery(rubric.topic,correct,g.score>=9?3:2,correct?null:"resposta aberta incompleta: "+rubric.topic);
   log({mode:"open",topic:rubric.topic,score:g.score});
+  emitActivity("open_answer",{score:g.score},rubric.topic);
   save();
   const cls=g.score>=8?"score-good":g.score>=5?"score-mid":"score-bad";
   result.innerHTML='<div class="'+cls+'"><div class="score-circle">'+g.score+'<small>/10</small></div><div><strong>'+(g.score>=8?"Explicação sólida":g.score>=5?"Você entendeu parte do mecanismo":"Faltam peças importantes")+'</strong><p>A correção abaixo mostra exatamente o que apareceu e o que faltou.</p></div></div><div class="rubric-list">'+g.details.map(d=>'<div class="'+(d.hit?"hit":"miss")+'"><span>'+(d.hit?"✓":"○")+'</span><p><strong>'+d.label+'</strong><small>'+(d.hit?"+"+d.pts+" pontos":"não identificado")+'</small></p></div>').join("")+'</div><details class="model-answer"><summary>Ver resposta-modelo</summary><p>'+rubric.model+'</p></details>';
@@ -346,6 +353,7 @@ function gradeCurrentOpen(){
 
 function renderSimulations(){
   const p=panel("simulacoes");
+  simTouched=new Set();
   p.innerHTML=
   '<div class="sim-grid">'+
     '<article class="sim-card"><span class="lab-badge">SIMULAÇÃO 1</span><h3>Misturador de modulação</h3><p>Altere as variáveis e veja a direção prevista da percepção em um <strong>modelo didático qualitativo</strong>, não uma fórmula clínica.</p>'+
@@ -353,11 +361,13 @@ function renderSimulations(){
       '<div class="pain-output"><div class="pain-bar"><i id="painBar"></i></div><strong id="painLabel"></strong><p id="painExplain"></p></div></article>'+
     '<article class="sim-card"><span class="lab-badge">SIMULAÇÃO 2</span><h3>Corrida de condução</h3><p>Escolha a distância aproximada entre o receptor e a medula/encéfalo. O cálculo usa faixas didáticas de velocidade.</p>'+slider("distance","Distância",1,0.2,2,0.1," m")+'<div class="race-results" id="raceResults"></div><small>Faixas aproximadas usadas: Aβ 35–75 m/s, Aδ 5–30 m/s, C 0,5–2 m/s.</small></article>'+
     '<article class="sim-card full"><span class="lab-badge">SIMULAÇÃO 3</span><h3>“E se eu mudar só uma coisa?”</h3><p>Selecione uma alteração. O sistema mantém o restante do caso igual e mostra qual mecanismo mudou.</p><div class="counter-grid"><button data-counter="touch">Adicionar toque/pressão</button><button data-counter="focus">Aumentar foco na dor</button><button data-counter="anxiety">Aumentar ansiedade</button><button data-counter="desc">Aumentar inibição descendente</button></div><div class="counter-result" id="counterResult">Escolha uma variável.</div></article>'+
-  '</div>';
-  $$('input[type="range"]',p).forEach(i=>i.addEventListener("input",updateSims));
-  $$("[data-counter]",p).forEach(b=>b.addEventListener("click",()=>counterfactual(b.dataset.counter)));
-  updateSims();
+  '</div><div class="sim-complete"><button class="lab-primary" id="saveSimulation" disabled>Concluir sessão de simulação</button><small id="simProgress">Interaja com pelo menos 3 variáveis diferentes.</small></div>';
+  $('input[type="range"]',p).forEach(i=>i.addEventListener("input",()=>{simTouched.add(i.id);updateSims();updateSimulationCompletion()}));
+  $("[data-counter]",p).forEach(b=>b.addEventListener("click",()=>{simTouched.add("counter-"+b.dataset.counter);counterfactual(b.dataset.counter);updateSimulationCompletion()}));
+  $("#saveSimulation",p)?.addEventListener("click",()=>{const score=Math.min(100,60+simTouched.size*10);emitActivity("simulation",{score});$("#saveSimulation",p).disabled=true;$("#simProgress",p).textContent="Simulação registrada: "+score+"%.";});
+  updateSims();updateSimulationCompletion();
 }
+function updateSimulationCompletion(){const btn=$("#saveSimulation"),txt=$("#simProgress");if(!btn||!txt)return;btn.disabled=simTouched.size<3;txt.textContent=simTouched.size<3?"Interaja com pelo menos "+(3-simTouched.size)+" variável(is) diferente(s).":"Pronto para registrar esta sessão de simulação.";} 
 function slider(id,label,val,min=0,max=100,step=1,suffix=""){
   return '<label class="sim-slider"><span>'+label+' <b id="'+id+'Val">'+val+suffix+'</b></span><input id="'+id+'" type="range" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'" data-suffix="'+suffix+'"></label>';
 }
@@ -409,6 +419,7 @@ function renderCaseStep(){
     const pct=Math.round(c.correct/c.steps.length*100);
     state.caseLevel=(state.caseLevel||0)+1;
     log({mode:"case",score:pct,name:c.stem});
+    emitActivity("case",{score:pct});
     save();
     p.innerHTML='<div class="case-finish"><div class="score-circle">'+pct+'<small>%</small></div><div><span class="lab-badge good">CASO CONCLUÍDO</span><h3>'+(pct>=75?"Bom raciocínio":"Vale revisar o mecanismo")+'</h3><p>Você acertou '+c.correct+' de '+c.steps.length+' etapas. O próximo caso usará '+(["exemplo resolvido","ajuda parcial","menos ajuda"][state.caseLevel%3])+' conforme sua sequência.</p><button class="lab-primary" id="nextCase">Novo caso</button></div></div>';
     $("#nextCase",p).addEventListener("click",()=>{caseSession=null;startCase()});return;
