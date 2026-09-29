@@ -1,4 +1,4 @@
-name: BIOMED OpenCode Tutor - read only
+name: BIOMED OpenCode Tutor - Nemotron 3 Ultra Free
 
 on:
   workflow_dispatch:
@@ -32,27 +32,15 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Instalar e iniciar Ollama
+      - name: Validar chave OpenCode Zen
         shell: bash
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         run: |
-          curl -fsSL https://ollama.com/install.sh | sh
-          nohup ollama serve > /tmp/ollama.log 2>&1 &
-          for i in {1..30}; do
-            if curl -fsS http://127.0.0.1:11434/api/tags >/dev/null; then
-              break
-            fi
-            sleep 1
-          done
-          curl -fsS http://127.0.0.1:11434/api/tags >/dev/null
-
-      - name: Baixar Qwen para o runner
-        shell: bash
-        run: |
-          ollama pull qwen2.5:3b
-          ollama list
-          curl -fsS http://127.0.0.1:11434/api/generate             -H "Content-Type: application/json"             -d '{"model":"qwen2.5:3b","prompt":"Responda somente BIOMED_OK","stream":false,"options":{"num_predict":20}}'             | tee /tmp/ollama-smoke.json
-          test -s /tmp/ollama-smoke.json
-          grep -q 'BIOMED_OK' /tmp/ollama-smoke.json
+          if [ -z "$OPENCODE_API_KEY" ]; then
+            echo "::error::Adicione o secret OPENCODE_API_KEY ao repositório para usar o Nemotron 3 Ultra Free."
+            exit 1
+          fi
 
       - name: Instalar OpenCode
         shell: bash
@@ -60,16 +48,17 @@ jobs:
           curl -fsSL https://opencode.ai/install | bash
           echo "$HOME/.opencode/bin" >> "$GITHUB_PATH"
 
-      - name: Executar Tutor OpenCode local
+      - name: Executar Tutor OpenCode com Nemotron 3 Ultra Free
         shell: bash
         env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           PROMPT: ${{ github.event_name == 'workflow_dispatch' && inputs.prompt || github.event.issue.body }}
         run: |
-          timeout 150s opencode run             --model ollama/qwen2.5:3b             --agent tutor             --format json             "$PROMPT" | tee opencode-output.ndjson
+          timeout 180s opencode run             --model opencode/nemotron-3-ultra-free             --agent tutor             --format json             "$PROMPT" | tee opencode-output.ndjson
 
       - name: Validar resposta
         shell: bash
         run: |
           test -s opencode-output.ndjson
           grep -q '"type"' opencode-output.ndjson
-          echo "OpenCode Tutor executado com Qwen local. Nenhuma API externa foi usada."
+          echo "OpenCode Tutor executado com Nemotron 3 Ultra Free via OpenCode Zen."
