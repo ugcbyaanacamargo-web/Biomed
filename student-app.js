@@ -242,28 +242,68 @@ async function sendTutor(e){
   appendMsg("user",text);input.value="";
   const mode=currentTutorMode;currentTutorMode="chat";
   tutorMessages.push({role:"user",content:text});
-  const loading=document.createElement("div");loading.className="chat-msg ai loading";loading.innerHTML="<b>Tutor BIOMED</b><p>Pensando...</p>";$("#chatLog").appendChild(loading);
+  const loading=document.createElement("div");
+  loading.className="chat-msg ai loading";
+  loading.innerHTML="<b>Tutor BIOMED</b><p>Pensando...</p>";
+  $("#chatLog").appendChild(loading);
+
+  let data=null;
   try{
-    let reply,parsed=null,model=null;
     if(serverMode&&session?.token){
-      const data=await api("/api/tutor",{method:"POST",body:JSON.stringify({mode,messages:tutorMessages})});
-      reply=data.content;parsed=data.parsed;model=data.model;
-      const providerLabel=data.provider==="opencode"?"OpenCode Zen":data.provider==="vercel-free"?"Vercel AI Free":"Tutor IA";
-      $("#tutorStatus").classList.add("online");$("#tutorStatus span").textContent=providerLabel+" • "+model;
-    }else reply=localTutor(text,mode);
+      try{
+        data=await api("/api/tutor",{method:"POST",body:JSON.stringify({mode,messages:tutorMessages})});
+      }catch(serverError){
+        data=null;
+      }
+    }
+
+    if(!data&&window.BiomedLocalLLM?.supported()){
+      $("#tutorStatus").classList.add("online");
+      $("#tutorStatus span").textContent=window.BiomedLocalLLM.ready()
+        ?"IA local no navegador • "+window.BiomedLocalLLM.model
+        :"Preparando IA local gratuita...";
+      data=await window.BiomedLocalLLM.chat({
+        mode,
+        messages:tutorMessages,
+        student,
+        onProgress:(progress)=>{
+          const p=$("p",loading);if(p)p.textContent=progress;
+          $("#tutorStatus span").textContent="IA local • "+progress;
+        }
+      });
+    }
+
+    if(!data){
+      data={provider:"rules",model:"motor local BIOMED",content:localTutor(text,mode),parsed:null};
+    }
+
     loading.remove();
-    if(mode==="grade"&&parsed){
-      const formatted="Nota "+parsed.score+"/10\n\n"+(parsed.feedback||"")+"\n\nO que faltou: "+(parsed.gaps||[]).join("; ")+"\n\nPróxima pergunta: "+(parsed.nextQuestion||"");
+    const providerLabel=
+      data.provider==="opencode"?"OpenCode Zen":
+      data.provider==="webllm"?"WebLLM local":
+      data.provider==="vercel-free"?"Vercel AI":
+      "Motor local";
+    $("#tutorStatus").classList.add("online");
+    $("#tutorStatus span").textContent=providerLabel+" • "+(data.model||"BIOMED");
+
+    if(mode==="grade"&&data.parsed){
+      const parsed=data.parsed;
+      const formatted="Nota "+parsed.score+"/10\n\n"+(parsed.feedback||"")+
+        "\n\nO que faltou: "+(parsed.gaps||[]).join("; ")+
+        "\n\nPróxima pergunta: "+(parsed.nextQuestion||"");
       appendMsg("ai",formatted);
       await recordEvent("open_answer",{score:Number(parsed.score)||0},parsed.topic||null);
     }else{
-      appendMsg("ai",reply);tutorMessages.push({role:"assistant",content:reply});
-      await recordEvent("tutor_turn",{mode});
+      const reply=data.content||localTutor(text,mode);
+      appendMsg("ai",reply);
+      tutorMessages.push({role:"assistant",content:reply});
+      await recordEvent("tutor_turn",{mode,provider:data.provider||"local"});
     }
   }catch(ex){
     loading.remove();
     const reply=localTutor(text,mode);appendMsg("ai",reply);
-    $("#tutorStatus").classList.remove("online");$("#tutorStatus span").textContent="Modo local • IA ainda não conectada";
+    $("#tutorStatus").classList.remove("online");
+    $("#tutorStatus span").textContent="Motor pedagógico local";
   }
 }
 async function checkTutor(){
