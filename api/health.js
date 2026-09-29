@@ -8,6 +8,7 @@ export default async function handler(req,res){
     database:Boolean(BIOMED_DB.configured),
     databaseMode:"supabase-rpc",
     learningPlatform:"guided-v2",
+    deploymentMarker:"guided-v2-production",
     learningState:true,
     assessments:true,
     visualTutor:true,
