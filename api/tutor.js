@@ -1,6 +1,6 @@
 import {allowCors,json,readJson} from "./_lib/security.js";
 import {rpc,bearerToken} from "./_lib/biomed-rpc.js";
-import {runOpenCodeTutor} from "./_lib/opencode-sandbox.js";
+import {runOpenCodeTutor} from "./_lib/opencode-runtime.js";
 import {normalizeTutorPlan,fallbackTutorPlan,containsUnsafeTutorContent} from "../tutor-schema.js";
 
 const DEFAULT_MODEL="muse-spark-1.3-contributor-free";
