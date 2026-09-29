@@ -15,7 +15,7 @@ async function api(path,options={}){
   if(token())headers.Authorization="Bearer "+token();
   const res=await fetch(path,{...options,headers});
   const data=await res.json().catch(()=>({}));
-  if(!res.ok)throw new Error(data.error||"Falha ao carregar.");
+  if(!res.ok){const error=new Error(data.error||"Falha ao carregar.");error.status=res.status;throw error}
   return data;
 }
 async function refreshProfile(){profile=await api("/api/learning-state");identifyStudent(profile.student?.id);return profile}
@@ -260,7 +260,9 @@ async function mount(){
     window.addEventListener("hashchange",render);
     if(!location.hash.startsWith("#app/"))route("home");else render();
   }catch(e){
-    mounted=false;app.innerHTML='<div class="app-error" style="margin:30px"><strong>Não consegui carregar seu plano.</strong><p>'+esc(e.message)+'</p></div>';
+    mounted=false;
+    if(e?.status===401){localStorage.removeItem(SESSION_KEY);app.remove();document.body.classList.remove("student-authenticated","guided-study-active");window.dispatchEvent(new CustomEvent("biomed:auth-expired"));return}
+    app.innerHTML='<div class="app-error" style="margin:30px"><strong>Não consegui carregar seu plano.</strong><p>'+esc(e.message)+'</p></div>';
   }
 }
-const observer=new MutationObserver(mount);observer.observe(document.body,{attributes:true,attributeFilter:["class"]});mount();
+window.addEventListener("biomed:authenticated",mount);mount();
