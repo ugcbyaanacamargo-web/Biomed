@@ -101,7 +101,7 @@ export default async function handler(req,res){
       }
     }
 
-    const oidc=String(process.env.VERCEL_OIDC_TOKEN||"").trim();
+    const oidc=String(process.env.VERCEL_OIDC_TOKEN||req.headers["x-vercel-oidc-token"]||"").trim();
     if(oidc){
       for(const model of VERCEL_FREE_MODELS){
         try{
