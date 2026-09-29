@@ -7,22 +7,24 @@ on:
         description: "Pergunta pedagógica para testar o tutor"
         required: true
         type: string
-  push:
-    branches: [main]
-    paths:
-      - ".opencode-smoke-test"
+  issues:
+    types: [opened]
 
 permissions:
+  id-token: write
   contents: read
   actions: read
+  issues: read
 
 jobs:
   tutor:
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.issue.title, '[BIOMED TUTOR]')
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
       actions: read
+      issues: read
 
     steps:
       - name: Checkout somente leitura
@@ -51,11 +53,11 @@ jobs:
           share: false
           prompt: |
             Você é o Tutor BIOMED.
-            Leia TUTOR_RULES.md antes de responder.
-            Você está em execução SOMENTE LEITURA.
+            Siga integralmente TUTOR_RULES.md.
+            Esta execução é SOMENTE LEITURA.
             Não altere arquivos, branches, issues, pull requests ou configurações.
             Não execute tarefas administrativas.
             Responda apenas como tutor educacional.
 
-            Solicitação:
-            ${{ inputs.prompt || 'Teste de funcionamento: explique em três frases a diferença entre nocicepção e dor e finalize com uma pergunta ao aluno.' }}
+            Pergunta:
+            ${{ github.event_name == 'workflow_dispatch' && inputs.prompt || github.event.issue.body }}
