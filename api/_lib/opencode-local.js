@@ -5,7 +5,9 @@ import path from "node:path";
 const PORT=4096;
 const BASE="http://127.0.0.1:"+PORT;
 const DEADLINE_MS=Math.max(3000,Math.min(45000,Number(process.env.OPENCODE_DEADLINE_MS)||12000));
-const BIN=path.resolve("node_modules/.bin/"+(process.platform==="win32"?"opencode.cmd":"opencode"));\nconst SERVER_USER=String(process.env.OPENCODE_SERVER_USERNAME||"opencode");\nconst SERVER_PASSWORD=String(process.env.OPENCODE_SERVER_PASSWORD||"");
+const BIN=path.resolve("node_modules/.bin/"+(process.platform==="win32"?"opencode.cmd":"opencode"));
+const SERVER_USER=String(process.env.OPENCODE_SERVER_USERNAME||"opencode");
+const SERVER_PASSWORD=String(process.env.OPENCODE_SERVER_PASSWORD||"");
 
 let startPromise=null;
 let child=null;
@@ -116,4 +118,6 @@ export async function runOpenCodeLocalTutor({studentId,prompt,model,apiKey}){
   }
 }
 
-export async function warmOpenCodeLocal(apiKey){if(!apiKey)throw new Error("OPENCODE_API_KEY ausente");await ensureServer(apiKey);return true}\n\nexport const RAILWAY_OPENCODE={port:PORT,deadlineMs:DEADLINE_MS,binary:BIN,agent:"biomed-tutor"};
+export async function warmOpenCodeLocal(apiKey){if(!apiKey)throw new Error("OPENCODE_API_KEY ausente");await ensureServer(apiKey);return true}
+
+export const RAILWAY_OPENCODE={port:PORT,deadlineMs:DEADLINE_MS,binary:BIN,agent:"biomed-tutor"};
