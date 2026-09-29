@@ -1,0 +1,75 @@
+{
+  "version": 1,
+  "course": "Sensibilidade Somática e Modulação da Dor",
+  "topics": [
+    {
+      "id": "receptores",
+      "title": "Receptores sensoriais",
+      "level": "bronze",
+      "objectives": ["diferenciar mecanorreceptores, termorreceptores, nociceptores e proprioceptores", "explicar transdução sensorial"],
+      "variables": ["tipo de estímulo", "região corporal", "intensidade", "modalidade sensorial"]
+    },
+    {
+      "id": "fibras",
+      "title": "Fibras Aβ, Aδ e C",
+      "level": "bronze",
+      "objectives": ["comparar diâmetro, mielina e velocidade", "relacionar Aβ a toque/pressão, Aδ à primeira dor e C à dor lenta/difusa"],
+      "variables": ["fibra", "mielinização", "velocidade", "qualidade da dor", "tempo"]
+    },
+    {
+      "id": "vias",
+      "title": "Vias somatossensoriais",
+      "level": "prata",
+      "objectives": ["distinguir coluna dorsal–lemnisco medial do sistema anterolateral", "relacionar modalidade à via"],
+      "variables": ["modalidade", "lado da lesão", "nível da via", "destino encefálico"]
+    },
+    {
+      "id": "nocicepcao",
+      "title": "Nocicepção e dor",
+      "level": "prata",
+      "objectives": ["distinguir processo neural de experiência dolorosa", "explicar por que estímulos semelhantes podem gerar experiências diferentes"],
+      "variables": ["intensidade do estímulo", "experiência", "contexto", "atenção", "emoção"]
+    },
+    {
+      "id": "portao",
+      "title": "Teoria do Portão",
+      "level": "ouro",
+      "objectives": ["explicar o papel de Aβ e interneurônios inibitórios", "localizar a modulação no corno dorsal"],
+      "variables": ["atividade Aβ", "atividade Aδ/C", "interneurônio inibitório", "neurônio de projeção", "estimulação tátil"]
+    },
+    {
+      "id": "descendente",
+      "title": "Modulação descendente",
+      "level": "ouro",
+      "objectives": ["explicar controle de cima para baixo", "distinguir facilitação e inibição"],
+      "variables": ["atenção", "expectativa", "ansiedade", "inibição descendente", "facilitação"]
+    },
+    {
+      "id": "contexto",
+      "title": "Atenção, emoção e contexto",
+      "level": "ouro",
+      "objectives": ["prever como contexto pode alterar a percepção", "evitar confundir modulação com dor imaginária"],
+      "variables": ["foco", "distração", "ansiedade", "estresse", "expectativa", "memória"]
+    },
+    {
+      "id": "semaforo",
+      "title": "Semáforo Sensorial",
+      "level": "diamante",
+      "objectives": ["classificar situações pelo mecanismo", "justificar vermelho, amarelo ou verde sem decorar"],
+      "variables": ["entrada nociceptiva", "fatores individuais", "estimulação tátil", "controle descendente", "atenção"]
+    }
+  ],
+  "levels": {
+    "bronze": {"purpose": "fundamentos", "difficulty": ["reconhecer", "definir", "associar"]},
+    "prata": {"purpose": "relações", "difficulty": ["comparar", "explicar", "aplicar em caso simples"]},
+    "ouro": {"purpose": "integração", "difficulty": ["integrar mecanismos", "prever mudanças", "justificar"]},
+    "diamante": {"purpose": "transferência", "difficulty": ["resolver caso novo", "contrafactual", "explicar cadeia causal completa"]}
+  },
+  "questionModes": ["multiple_choice", "open", "simulation", "counterfactual", "case_chain", "teach_back"],
+  "gradingPrinciples": [
+    "dar crédito ao mecanismo correto mesmo com vocabulário diferente",
+    "não premiar apenas repetição de palavras-chave",
+    "identificar erro conceitual específico",
+    "criar a próxima questão a partir da lacuna detectada"
+  ]
+}
