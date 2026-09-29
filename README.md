@@ -1,78 +1,134 @@
-# BIOMED — Sensibilidade Somática e Modulação da Dor
+# BIOMED — Portal Adaptativo de Fisiologia Sensorial
 
-Plataforma educacional interativa para estudo de fisiologia sensorial, nocicepção e modulação da dor.
+Plataforma educacional para sensibilidade somática, nocicepção e modulação da dor.
 
-## Arquitetura de aprendizagem
+## Experiência do aluno
 
-O conteúdo segue cinco etapas:
+1. **Entrada por CPF**
+   - o CPF é validado;
+   - no servidor ele é transformado em HMAC-SHA256;
+   - o CPF original não é gravado no banco;
+   - se o aluno não existir, o site pede o nome e cria o perfil;
+   - se já existir, recupera nome, nível e progresso.
 
-1. **Perceber** — modalidades e receptores.
-2. **Conduzir** — fibras Aβ, Aδ e C e vias ascendentes.
-3. **Processar** — nocicepção x dor, atenção, emoção e contexto.
-4. **Modular** — Teoria do Portão e modulação descendente.
-5. **Aplicar** — Semáforo Sensorial e situações práticas.
+2. **Painel personalizado**
+   - domínio global;
+   - XP;
+   - precisão;
+   - missão recomendada;
+   - mapa de domínio por tema;
+   - prova de nível;
+   - evolução Bronze → Prata → Ouro → Diamante.
 
-Depois o aluno entra em uma área de **treino adaptativo** e **revisão ativa**.
+3. **Tutor BIOMED**
+   - chat por texto;
+   - explicação personalizada;
+   - geração de perguntas novas;
+   - simulações;
+   - avaliação de resposta aberta de 0 a 10;
+   - feedback e nova pergunta focada na lacuna.
 
-## Laboratório adaptativo
+4. **Laboratório adaptativo**
+   - diagnóstico;
+   - perguntas variáveis;
+   - respostas abertas;
+   - simulações;
+   - casos clínicos em etapas;
+   - mapa de domínio.
 
-O site agora possui um motor local, sem API paga, que:
+5. **Ranking**
+   - usa domínio, provas, simulações/casos, retenção, consistência e respostas abertas;
+   - chat isolado não aumenta ranking;
+   - exibe nome mascarado, nunca CPF.
 
-- aplica **diagnóstico inicial** de 10 questões intercaladas;
-- mantém um **mapa de domínio por conceito**, em vez de contar apenas páginas concluídas;
-- gera **questões variáveis** combinando assunto, contexto e caso;
-- prioriza automaticamente os **assuntos com menor domínio**;
-- registra **confusões recorrentes** (ex.: Aδ × C, nocicepção × dor);
-- corrige **respostas abertas de 0 a 10** com rubrica por conceitos esperados;
-- mostra exatamente **o que apareceu e o que faltou** na resposta;
-- oferece **3 simulações**:
-  - misturador de modulação da dor;
-  - corrida de condução Aβ/Aδ/C;
-  - perguntas contrafactuais “e se eu mudar só uma variável?”;
-- apresenta **casos em etapas** com retirada progressiva da ajuda:
-  - exemplo resolvido;
-  - ajuda parcial;
-  - resolução independente;
-- mistura tópicos para **prática intercalada**;
-- cria um **relatório do tutor** dizendo o que o aluno deve estudar a seguir;
-- guarda progresso, domínio e histórico no armazenamento local do navegador;
-- funciona sem conta, banco de dados ou servidor.
+## Métrica de aprendizagem
 
-## Recursos gerais
+Learning Score:
 
-- 6 ilustrações vetoriais próprias em assets/;
-- navegação guiada em 5 etapas;
-- três modos de estudo;
-- continuar de onde parou;
-- checagens rápidas por etapa;
-- Teoria do Portão interativa;
-- Semáforo Sensorial com 10 situações;
-- flashcards e quiz;
-- revisão distribuída sugerida;
-- busca interna;
-- modo claro/escuro;
-- layout responsivo;
-- versão para impressão.
+- 40% domínio por tópico;
+- 25% provas;
+- 15% simulações e casos;
+- 10% retenção;
+- 5% consistência;
+- 5% qualidade de respostas abertas.
 
-## Base pedagógica
+### Níveis
 
-A estrutura combina:
+- **Bronze** — entrada e fundamentos.
+- **Prata** — score ≥45, diagnóstico, ao menos 4 módulos e prova ≥60%.
+- **Ouro** — score ≥70, todos os tópicos ≥70%, prova ≥75% e práticas aprovadas.
+- **Diamante** — score ≥88, tópicos ≥85%, prova ≥85%, retenção ≥80% e respostas abertas fortes.
 
-- segmentação e sinalização em aprendizagem multimídia;
-- prática de recuperação;
-- prática distribuída;
-- autoexplicação;
-- exemplos resolvidos com retirada progressiva da ajuda;
-- prática intercalada;
-- avaliação formativa com feedback;
-- aprendizagem por domínio.
+## OpenCode
 
-As referências acadêmicas aparecem na página do site.
+O projeto contém dois caminhos separados:
+
+### Tutor no site
+A função `/api/tutor` usa a API OpenCode Zen e tenta, em ordem, modelos gratuitos compatíveis:
+
+- `nemotron-3.5-lightning-free`
+- `mimo-v2.6-flash-free`
+- `ling-3.0-flash-fin-free`
+- `space-bunny-free`
+
+O CPF e o nome do aluno **não são enviados ao modelo**.
+
+### OpenCode dentro do GitHub
+`.github/workflows/opencode-tutor.yml` executa OpenCode no GitHub Actions em modo somente leitura.
+
+`opencode.json` bloqueia:
+- edição;
+- escrita;
+- bash;
+- subagentes;
+- web;
+- diretórios externos.
+
+Mesmo que um aluno escreva uma instrução para alterar o repositório, o Tutor não recebe permissões de escrita.
+
+## Banco de dados
+
+O repositório é público, portanto dados pessoais **não são gravados em arquivos GitHub**.
+
+O código e o schema ficam no GitHub em:
+
+`db/schema.sql`
+
+Os registros de alunos ficam em banco persistente configurado pelo servidor.
+
+Variáveis necessárias na Vercel:
+
+```env
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+CPF_HMAC_SECRET=
+SESSION_SECRET=
+OPENCODE_API_KEY=
+OPENCODE_MODEL=nemotron-3.5-lightning-free
+ALLOWED_ORIGIN=https://biomed-sepia.vercel.app
+```
+
+Enquanto o banco não estiver conectado, o frontend entra em **modo local** e salva o perfil apenas no navegador. Isso permite testar o fluxo, mas não oferece reconhecimento entre aparelhos nem ranking global.
+
+## Arquivos principais
+
+- `index.html` — conteúdo principal
+- `styles.css` — design didático
+- `student.css` — portal do aluno
+- `app.js` — navegação
+- `adaptive-engine.js` — motor adaptativo
+- `student-app.js` — autenticação, painel, tutor, ranking e provas
+- `api/auth.js`
+- `api/profile.js`
+- `api/event.js`
+- `api/ranking.js`
+- `api/tutor.js`
+- `api/health.js`
+- `db/schema.sql`
+- `TUTOR_RULES.md`
 
 ## Deploy
 
-O projeto é HTML/CSS/JavaScript puro.
+Site: https://biomed-sepia.vercel.app
 
-Na Vercel ou Netlify, publique a raiz do repositório sem comando de build.
-
-Site atual: https://biomed-sepia.vercel.app
+O projeto continua compatível com deploy automático da branch `main` na Vercel.
