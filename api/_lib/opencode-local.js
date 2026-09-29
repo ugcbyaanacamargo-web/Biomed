@@ -5,7 +5,7 @@ import path from "node:path";
 const PORT=4096;
 const BASE="http://127.0.0.1:"+PORT;
 const DEADLINE_MS=12000;
-const BIN=path.resolve("node_modules/opencode-ai/bin/"+(process.platform==="win32"?"opencode.exe":"opencode"));
+const BIN=path.resolve("node_modules/.bin/"+(process.platform==="win32"?"opencode.cmd":"opencode"));
 
 let startPromise=null;
 let child=null;
