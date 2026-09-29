@@ -118,6 +118,7 @@ function maybeParse(content,mode){
 export default async function handler(req,res){
   if(allowCors(req,res))return;
   if(req.method!=="POST")return json(res,405,{error:"Método não permitido"});
+  if(!IS_RAILWAY)return proxyTutorToRailway(req,res);
   const token=bearerToken(req);
   if(!token)return json(res,401,{error:"Sessão ausente"});
   try{
