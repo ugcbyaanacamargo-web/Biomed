@@ -1,18 +1,18 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "provider": {
-    "biomed-free": {
+    "github-models": {
       "npm": "@ai-sdk/openai-compatible",
-      "name": "BIOMED Free Gateway",
+      "name": "GitHub Models Free",
       "options": {
-        "baseURL": "https://biomed-sepia.vercel.app/api/opencode-gateway",
-        "apiKey": "{env:BIOMED_PROXY_TOKEN}"
+        "baseURL": "https://models.github.ai/inference",
+        "apiKey": "{env:GITHUB_MODELS_TOKEN}"
       },
       "models": {
-        "biomed-tutor": {
-          "name": "BIOMED Tutor Free",
+        "openai/gpt-4.1-mini": {
+          "name": "GPT-4.1 mini via GitHub Models",
           "limit": {
-            "context": 64000,
+            "context": 128000,
             "output": 4096
           }
         }
@@ -23,7 +23,7 @@
     "tutor": {
       "description": "Tutor BIOMED educacional, estritamente somente leitura",
       "mode": "primary",
-      "model": "biomed-free/biomed-tutor",
+      "model": "github-models/openai/gpt-4.1-mini",
       "prompt": "{file:./TUTOR_RULES.md}",
       "permission": {
         "*": "deny",
