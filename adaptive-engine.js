@@ -2,8 +2,8 @@
 "use strict";
 const root=document.getElementById("labApp");
 if(!root)return;
-const $=(selector,scope=document)=>scope.querySelector(selector);
-const $=(selector,scope=document)=>[...scope.querySelectorAll(selector)];
+const qs=(selector,scope=document)=>scope.querySelector(selector);
+const qsa=(selector,scope=document)=>[...scope.querySelectorAll(selector)];
 
 const STORAGE="biomed-adaptive-v2";
 const topics={
@@ -249,11 +249,11 @@ function renderShell(){
     '<div class="lab-panel" data-labpanel="simulacoes"></div>'+
     '<div class="lab-panel" data-labpanel="casos"></div>'+
     '<div class="lab-panel" data-labpanel="dominio"></div>';
-  $$(".lab-tab",root).forEach(b=>b.addEventListener("click",()=>switchTab(b.dataset.labtab)));
+  qsa(".lab-tab",root).forEach(b=>b.addEventListener("click",()=>switchTab(b.dataset.labtab)));
 }
 function switchTab(tab){
-  $$(".lab-tab",root).forEach(b=>b.classList.toggle("active",b.dataset.labtab===tab));
-  $$(".lab-panel",root).forEach(p=>p.classList.toggle("active",p.dataset.labpanel===tab));
+  qsa(".lab-tab",root).forEach(b=>b.classList.toggle("active",b.dataset.labtab===tab));
+  qsa(".lab-panel",root).forEach(p=>p.classList.toggle("active",p.dataset.labpanel===tab));
   if(tab==="diagnostico")renderDiagnostic();
   if(tab==="treino")renderTraining();
   if(tab==="aberta")renderOpen();
@@ -271,7 +271,7 @@ function renderDiagnostic(){
   }else{
     p.innerHTML='<div class="lab-intro-card"><div><span class="lab-badge">PRIMEIRO PASSO</span><h3>Descubra onde você realmente está</h3><p>São 10 perguntas misturadas. Elas não servem para “aprovar” ou “reprovar”: servem para evitar que você perca tempo revendo o que já sabe e encontrar suas lacunas.</p><ul><li>10 questões aleatórias</li><li>assuntos intercalados</li><li>mapa inicial de domínio</li><li>leva cerca de 4 minutos</li></ul></div><button class="lab-primary" id="startDiagnostic">Começar diagnóstico</button></div>';
   }
-  $("#startDiagnostic",p)?.addEventListener("click",startDiagnostic);
+  qs("#startDiagnostic",p)?.addEventListener("click",startDiagnostic);
 }
 function startDiagnostic(){
   diagnostic.active=true;diagnostic.index=0;diagnostic.correct=0;
@@ -286,7 +286,7 @@ function renderDiagnosticQuestion(){
   }
   const q=diagnostic.items[diagnostic.index];
   p.innerHTML='<div class="lab-question-card"><div class="lab-qtop"><span>Diagnóstico '+(diagnostic.index+1)+' / '+diagnostic.items.length+'</span><span>'+topics[q.topic].label+'</span></div><h3>'+q.stem+'</h3><div class="lab-options">'+q.options.map((o,i)=>'<button data-diag="'+i+'">'+o+'</button>').join("")+'</div><div class="lab-meter"><i style="width:'+((diagnostic.index)/diagnostic.items.length*100)+'%"></i></div></div>';
-  $$("[data-diag]",p).forEach(b=>b.addEventListener("click",()=>{
+  qsa("[data-diag]",p).forEach(b=>b.addEventListener("click",()=>{
     const correct=Number(b.dataset.diag)===q.correctIndex;
     if(correct)diagnostic.correct++;
     updateMastery(q.topic,correct,q.difficulty,correct?null:q.misconception);
@@ -310,17 +310,17 @@ function renderTraining(){
   p.innerHTML='<div class="adaptive-toolbar"><div><span class="lab-badge">MODO ADAPTATIVO</span><h3>O próximo exercício mira sua maior lacuna</h3><p>No momento, o sistema prioriza: <strong>'+topics[weak].label+'</strong>.</p></div><label>Foco<select id="topicFocus"><option value="">Automático (recomendado)</option>'+topicKeys.map(k=>'<option value="'+k+'">'+topics[k].label+'</option>').join("")+'</select></label></div><div id="trainingMount"></div>';
   currentQuestion=generateQuestion();
   mountTraining();
-  $("#topicFocus",p).addEventListener("change",e=>{currentQuestion=generateQuestion(e.target.value||null);mountTraining()});
+  qs("#topicFocus",p).addEventListener("change",e=>{currentQuestion=generateQuestion(e.target.value||null);mountTraining()});
 }
 function mountTraining(){
-  const mount=$("#trainingMount",panel("treino"));if(!mount)return;
+  const mount=qs("#trainingMount",panel("treino"));if(!mount)return;
   mount.innerHTML=trainingQuestionMarkup(currentQuestion);
-  $$("[data-train]",mount).forEach(btn=>btn.addEventListener("click",()=>answerTraining(Number(btn.dataset.train))));
-  $("#newQuestion",mount)?.addEventListener("click",()=>{const f=$("#topicFocus",panel("treino"))?.value||null;currentQuestion=generateQuestion(f);mountTraining()});
-  $("#nextAdaptive",mount)?.addEventListener("click",()=>{currentQuestion=generateQuestion();mountTraining()});
+  qsa("[data-train]",mount).forEach(btn=>btn.addEventListener("click",()=>answerTraining(Number(btn.dataset.train))));
+  qs("#newQuestion",mount)?.addEventListener("click",()=>{const f=qs("#topicFocus",panel("treino"))?.value||null;currentQuestion=generateQuestion(f);mountTraining()});
+  qs("#nextAdaptive",mount)?.addEventListener("click",()=>{currentQuestion=generateQuestion();mountTraining()});
 }
 function answerTraining(index){
-  const q=currentQuestion,mount=$("#trainingMount",panel("treino")),buttons=$$("[data-train]",mount);
+  const q=currentQuestion,mount=qs("#trainingMount",panel("treino")),buttons=qsa("[data-train]",mount);
   if(buttons.some(b=>b.disabled))return;
   const correct=index===q.correctIndex;
   buttons.forEach((b,i)=>{b.disabled=true;if(i===q.correctIndex)b.classList.add("correct");else if(i===index)b.classList.add("wrong")});
@@ -328,19 +328,19 @@ function answerTraining(index){
   log({mode:"adaptive",topic:q.topic,correct,stem:q.stem});
   emitActivity("question",{correct,mastery:state.mastery[q.topic]?.score??null},q.topic);
   save();
-  $("#trainFeedback",mount).innerHTML='<strong>'+(correct?"✓ Correto":"✕ Ainda não")+'</strong><p>'+q.explanation+'</p><small>'+(!correct?"Esse tipo de erro aumentou a prioridade deste assunto nas próximas questões.":"O sistema registrou o acerto e poderá aumentar a dificuldade.")+'</small>';
-  $("#nextAdaptive",mount).classList.remove("hidden");
+  qs("#trainFeedback",mount).innerHTML='<strong>'+(correct?"✓ Correto":"✕ Ainda não")+'</strong><p>'+q.explanation+'</p><small>'+(!correct?"Esse tipo de erro aumentou a prioridade deste assunto nas próximas questões.":"O sistema registrou o acerto e poderá aumentar a dificuldade.")+'</small>';
+  qs("#nextAdaptive",mount).classList.remove("hidden");
 }
 
 function renderOpen(){
   const p=panel("aberta"),rubric=pick(openRubrics);
   p.dataset.rubric=String(openRubrics.indexOf(rubric));
   p.innerHTML='<div class="open-layout"><div class="open-prompt"><span class="lab-badge">NOTA 0–10 POR CRITÉRIOS</span><h3>'+rubric.title+'</h3><p>'+rubric.prompt()+'</p><textarea id="openText" rows="8" placeholder="Escreva como explicaria para um colega. Tente usar o mecanismo, não apenas a resposta final."></textarea><div class="open-actions"><button class="lab-primary" id="gradeOpen">Corrigir minha explicação</button><button class="lab-secondary" id="newOpen">Nova pergunta</button></div><small class="lab-disclaimer">A nota é calculada por uma rubrica de conceitos esperados, sem depender de API externa de IA.</small></div><div class="open-result" id="openResult"><div class="empty-result">Sua nota e o que faltou aparecerão aqui.</div></div></div>';
-  $("#gradeOpen",p).addEventListener("click",()=>gradeCurrentOpen());
-  $("#newOpen",p).addEventListener("click",renderOpen);
+  qs("#gradeOpen",p).addEventListener("click",()=>gradeCurrentOpen());
+  qs("#newOpen",p).addEventListener("click",renderOpen);
 }
 function gradeCurrentOpen(){
-  const p=panel("aberta"),rubric=openRubrics[Number(p.dataset.rubric)],text=$("#openText",p).value.trim(),result=$("#openResult",p);
+  const p=panel("aberta"),rubric=openRubrics[Number(p.dataset.rubric)],text=qs("#openText",p).value.trim(),result=qs("#openResult",p);
   if(text.length<15){result.innerHTML='<div class="score-bad"><strong>Resposta muito curta</strong><p>Escreva pelo menos uma explicação completa para que a rubrica consiga avaliar.</p></div>';return}
   const g=gradeOpen(text,rubric);
   state.openAnswers++;
@@ -364,30 +364,30 @@ function renderSimulations(){
     '<article class="sim-card"><span class="lab-badge">SIMULAÇÃO 2</span><h3>Corrida de condução</h3><p>Escolha a distância aproximada entre o receptor e a medula/encéfalo. O cálculo usa faixas didáticas de velocidade.</p>'+slider("distance","Distância",1,0.2,2,0.1," m")+'<div class="race-results" id="raceResults"></div><small>Faixas aproximadas usadas: Aβ 35–75 m/s, Aδ 5–30 m/s, C 0,5–2 m/s.</small></article>'+
     '<article class="sim-card full"><span class="lab-badge">SIMULAÇÃO 3</span><h3>“E se eu mudar só uma coisa?”</h3><p>Selecione uma alteração. O sistema mantém o restante do caso igual e mostra qual mecanismo mudou.</p><div class="counter-grid"><button data-counter="touch">Adicionar toque/pressão</button><button data-counter="focus">Aumentar foco na dor</button><button data-counter="anxiety">Aumentar ansiedade</button><button data-counter="desc">Aumentar inibição descendente</button></div><div class="counter-result" id="counterResult">Escolha uma variável.</div></article>'+
   '</div><div class="sim-complete"><button class="lab-primary" id="saveSimulation" disabled>Concluir sessão de simulação</button><small id="simProgress">Interaja com pelo menos 3 variáveis diferentes.</small></div>';
-  $('input[type="range"]',p).forEach(i=>i.addEventListener("input",()=>{simTouched.add(i.id);updateSims();updateSimulationCompletion()}));
-  $("[data-counter]",p).forEach(b=>b.addEventListener("click",()=>{simTouched.add("counter-"+b.dataset.counter);counterfactual(b.dataset.counter);updateSimulationCompletion()}));
-  $("#saveSimulation",p)?.addEventListener("click",()=>{const score=Math.min(100,60+simTouched.size*10);emitActivity("simulation",{score});$("#saveSimulation",p).disabled=true;$("#simProgress",p).textContent="Simulação registrada: "+score+"%.";});
+  qs('input[type="range"]',p).forEach(i=>i.addEventListener("input",()=>{simTouched.add(i.id);updateSims();updateSimulationCompletion()}));
+  qs("[data-counter]",p).forEach(b=>b.addEventListener("click",()=>{simTouched.add("counter-"+b.dataset.counter);counterfactual(b.dataset.counter);updateSimulationCompletion()}));
+  qs("#saveSimulation",p)?.addEventListener("click",()=>{const score=Math.min(100,60+simTouched.size*10);emitActivity("simulation",{score});qs("#saveSimulation",p).disabled=true;qs("#simProgress",p).textContent="Simulação registrada: "+score+"%.";});
   updateSims();updateSimulationCompletion();
 }
-function updateSimulationCompletion(){const btn=$("#saveSimulation"),txt=$("#simProgress");if(!btn||!txt)return;btn.disabled=simTouched.size<3;txt.textContent=simTouched.size<3?"Interaja com pelo menos "+(3-simTouched.size)+" variável(is) diferente(s).":"Pronto para registrar esta sessão de simulação.";} 
+function updateSimulationCompletion(){const btn=qs("#saveSimulation"),txt=qs("#simProgress");if(!btn||!txt)return;btn.disabled=simTouched.size<3;txt.textContent=simTouched.size<3?"Interaja com pelo menos "+(3-simTouched.size)+" variável(is) diferente(s).":"Pronto para registrar esta sessão de simulação.";} 
 function slider(id,label,val,min=0,max=100,step=1,suffix=""){
   return '<label class="sim-slider"><span>'+label+' <b id="'+id+'Val">'+val+suffix+'</b></span><input id="'+id+'" type="range" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'" data-suffix="'+suffix+'"></label>';
 }
 function updateSims(){
-  ["noc","touch","focus","anx","inh","distance"].forEach(id=>{const el=$("#"+id);if(el){$("#"+id+"Val").textContent=el.value+(el.dataset.suffix||"")}});
-  if($("#noc")){
-    const noc=+$("#noc").value,t=+$("#touch").value,f=+$("#focus").value,a=+$("#anx").value,inh=+$("#inh").value;
+  ["noc","touch","focus","anx","inh","distance"].forEach(id=>{const el=qs("#"+id);if(el){qs("#"+id+"Val").textContent=el.value+(el.dataset.suffix||"")}});
+  if(qs("#noc")){
+    const noc=+qs("#noc").value,t=+qs("#touch").value,f=+qs("#focus").value,a=+qs("#anx").value,inh=+qs("#inh").value;
     const value=clamp(Math.round(20+noc*.58-t*.20+f*.12+a*.12-inh*.24),0,100);
-    $("#painBar").style.width=value+"%";
-    $("#painLabel").textContent=value<34?"Tendência menor":value<67?"Tendência intermediária":"Tendência maior";
+    qs("#painBar").style.width=value+"%";
+    qs("#painLabel").textContent=value<34?"Tendência menor":value<67?"Tendência intermediária":"Tendência maior";
     const factors=[];if(t>55)factors.push("toque Aβ favorece inibição");if(inh>55)factors.push("controle descendente inibitório");if(f>65)factors.push("foco pode aumentar saliência");if(a>65)factors.push("ansiedade pode amplificar a experiência");if(noc>70)factors.push("entrada nociceptiva alta");
-    $("#painExplain").textContent=factors.length?factors.join(" • "):"As variáveis estão em faixas intermediárias.";
+    qs("#painExplain").textContent=factors.length?factors.join(" • "):"As variáveis estão em faixas intermediárias.";
   }
-  if($("#distance")){
-    const d=+$("#distance").value;
+  if(qs("#distance")){
+    const d=+qs("#distance").value;
     const calc=(v1,v2)=>[(d/v2*1000).toFixed(1),(d/v1*1000).toFixed(1)];
     const ab=calc(35,75),ad=calc(5,30),c=calc(.5,2);
-    $("#raceResults").innerHTML='<div><b>Aβ</b><span>'+ab[0]+'–'+ab[1]+' ms</span></div><div><b>Aδ</b><span>'+ad[0]+'–'+ad[1]+' ms</span></div><div><b>C</b><span>'+c[0]+'–'+c[1]+' ms</span></div>';
+    qs("#raceResults").innerHTML='<div><b>Aβ</b><span>'+ab[0]+'–'+ab[1]+' ms</span></div><div><b>Aδ</b><span>'+ad[0]+'–'+ad[1]+' ms</span></div><div><b>C</b><span>'+c[0]+'–'+c[1]+' ms</span></div>';
   }
 }
 function counterfactual(k){
@@ -397,14 +397,14 @@ function counterfactual(k){
     anxiety:["Aumentar ansiedade","↑ estado emocional de ameaça → pode facilitar/amplificar a experiência dolorosa."],
     desc:["Aumentar inibição descendente","↑ controle inibitório de centros encefálicos → pode ↓ excitabilidade de circuitos nociceptivos espinais."]
   };
-  $("#counterResult").innerHTML='<strong>'+map[k][0]+'</strong><p>'+map[k][1]+'</p>';
+  qs("#counterResult").innerHTML='<strong>'+map[k][0]+'</strong><p>'+map[k][1]+'</p>';
 }
 
 function renderCases(){
   const p=panel("casos");
   if(!caseSession){
     p.innerHTML='<div class="lab-intro-card"><div><span class="lab-badge">EXEMPLO → AJUDA → SOZINHO</span><h3>Casos em etapas com retirada progressiva da ajuda</h3><p>Primeiro você vê uma resolução guiada; depois recebe pistas; por fim resolve um caso sem pistas. O nível sobe conforme você avança.</p></div><button class="lab-primary" id="startCase">Iniciar caso</button></div>';
-    $("#startCase",p).addEventListener("click",startCase);
+    qs("#startCase",p).addEventListener("click",startCase);
     return;
   }
   renderCaseStep();
@@ -424,7 +424,7 @@ function renderCaseStep(){
     emitActivity("case",{score:pct});
     save();
     p.innerHTML='<div class="case-finish"><div class="score-circle">'+pct+'<small>%</small></div><div><span class="lab-badge good">CASO CONCLUÍDO</span><h3>'+(pct>=75?"Bom raciocínio":"Vale revisar o mecanismo")+'</h3><p>Você acertou '+c.correct+' de '+c.steps.length+' etapas. O próximo caso usará '+(["exemplo resolvido","ajuda parcial","menos ajuda"][state.caseLevel%3])+' conforme sua sequência.</p><button class="lab-primary" id="nextCase">Novo caso</button></div></div>';
-    $("#nextCase",p).addEventListener("click",()=>{caseSession=null;startCase()});return;
+    qs("#nextCase",p).addEventListener("click",()=>{caseSession=null;startCase()});return;
   }
   const labels=["Exemplo resolvido","Ajuda parcial","Resolva sozinho"];
   const level=c.level;
@@ -432,14 +432,14 @@ function renderCaseStep(){
   if(level===0)hint='<div class="worked-hint"><strong>Exemplo guiado:</strong> '+step.why+' <em>Mesmo vendo a lógica, escolha a alternativa para reforçar a recuperação.</em></div>';
   if(level===1)hint='<div class="worked-hint"><strong>Pista:</strong> pense no caminho receptor → fibra → medula → modulação.</div>';
   p.innerHTML='<div class="case-player"><div class="case-progress"><span>'+labels[level]+'</span><span>Etapa '+(c.index+1)+' / '+c.steps.length+'</span></div><div class="case-stem"><strong>Caso</strong><p>'+c.stem+'</p></div>'+hint+'<h3>'+step.q+'</h3><div class="lab-options">'+shuffle(step.choices).map(o=>'<button data-case="'+o.replace(/"/g,"&quot;")+'">'+o+'</button>').join("")+'</div><div class="lab-feedback" id="caseFeedback"></div><button class="lab-primary hidden" id="caseNext">Continuar →</button></div>';
-  $$("[data-case]",p).forEach(b=>b.addEventListener("click",()=>{
+  qsa("[data-case]",p).forEach(b=>b.addEventListener("click",()=>{
     if(c.locked)return;c.locked=true;
     const ok=b.dataset.case===step.a;if(ok)c.correct++;
-    $$("[data-case]",p).forEach(x=>{x.disabled=true;if(x.dataset.case===step.a)x.classList.add("correct");else if(x===b&&!ok)x.classList.add("wrong")});
-    $("#caseFeedback",p).innerHTML='<strong>'+(ok?"✓ Correto":"✕ Revise esta etapa")+'</strong><p>'+step.why+'</p>';
-    $("#caseNext",p).classList.remove("hidden");
+    qsa("[data-case]",p).forEach(x=>{x.disabled=true;if(x.dataset.case===step.a)x.classList.add("correct");else if(x===b&&!ok)x.classList.add("wrong")});
+    qs("#caseFeedback",p).innerHTML='<strong>'+(ok?"✓ Correto":"✕ Revise esta etapa")+'</strong><p>'+step.why+'</p>';
+    qs("#caseNext",p).classList.remove("hidden");
   }));
-  $("#caseNext",p)?.addEventListener("click",()=>{c.index++;c.locked=false;renderCaseStep()});
+  qs("#caseNext",p)?.addEventListener("click",()=>{c.index++;c.locked=false;renderCaseStep()});
 }
 
 function masteryMarkup(compact=false){
@@ -460,10 +460,10 @@ function renderMastery(){
   renderTutor();
 }
 function renderTutor(){
-  const tested=topicKeys.filter(k=>state.mastery[k].score!=null),el=$("#labOverall");
+  const tested=topicKeys.filter(k=>state.mastery[k].score!=null),el=qs("#labOverall");
   const avg=tested.length?Math.round(tested.reduce((s,k)=>s+state.mastery[k].score,0)/tested.length):0;
   if(el)el.textContent=tested.length?avg+"%":"—";
-  const report=$("#tutorReport");if(!report)return;
+  const report=qs("#tutorReport");if(!report)return;
   const weak=weakestTopic(),m=state.mastery[weak];
   const strong=topicKeys.filter(k=>state.mastery[k].score!=null).sort((a,b)=>topicScore(b)-topicScore(a))[0];
   let advice;
