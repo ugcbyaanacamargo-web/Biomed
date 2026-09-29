@@ -64,7 +64,7 @@ begin
   select * into s from public.biomed_students where id=sid;
   select * into l from public.biomed_learning_state where student_id=sid;
 
-  select coalesce(jsonb_agg(to_jsonb(x) order by x.created_at desc),'[]'::jsonb)
+  select coalesce(jsonb_agg(to_jsonb(x) order by x."createdAt" desc),'[]'::jsonb)
   into attempts
   from (
     select id, module_id as "moduleId", exam_type as "examType", score,
