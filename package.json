@@ -6,6 +6,9 @@
   "engines": {
     "node": ">=22"
   },
+  "scripts": {
+    "test": "node --check study-platform.js && node --check visual-tutor.js && node --check learning-components.js && node --check api/tutor.js && node --test tests/*.test.mjs"
+  },
   "dependencies": {
     "@vercel/sandbox": "3.5.0"
   }
