@@ -100,7 +100,7 @@ export async function runOpenCodeLocalTutor({studentId,prompt,model,apiKey}){
 
     const parts=Array.isArray(result?.parts)?result.parts:[];
     const content=parts.filter(p=>p?.type==="text"&&p.text).map(p=>p.text).join("\n").trim();
-    if(!content)throw new Error("OpenCode retornou resposta vazia");
+    if(!content){const detail=result?.info?.error||result?.info?.finish||result?.info?.status||null;throw new Error("OpenCode retornou resposta vazia"+(detail?": "+JSON.stringify(detail).slice(0,600):""))}
     return{content,model,runtime:"railway-persistent-opencode",durationMs:Date.now()-started};
   }catch(error){
     if(sessionId){
