@@ -56,7 +56,11 @@ export async function mountVisualTutor(mount,{prompt="Conduza uma atividade visu
     trackLearningEvent("tutor_action_rendered",{title:plan.screen.title,blocks:plan.blocks.length});
     await learningAction("tutor_action",{title:plan.screen.title,blockTypes:plan.blocks.map(b=>b.type)});
     const banner=document.createElement("div");banner.className="vt-screen-banner";
-    banner.innerHTML='<div><span>'+plan.screen.progressLabel+'</span><h3>'+plan.screen.title+'</h3><p>'+plan.screen.objective+'</p></div>';
+    const bannerCopy=document.createElement("div");
+    const progress=document.createElement("span");progress.textContent=plan.screen.progressLabel;
+    const heading=document.createElement("h3");heading.textContent=plan.screen.title;
+    const objective=document.createElement("p");objective.textContent=plan.screen.objective;
+    bannerCopy.append(progress,heading,objective);banner.append(bannerCopy);
     canvas.replaceChildren(banner);
     const blocks=document.createElement("div");blocks.className="learning-stage";canvas.append(blocks);
     renderBlocks(blocks,plan.blocks,{
@@ -69,7 +73,11 @@ export async function mountVisualTutor(mount,{prompt="Conduza uma atividade visu
         result.textContent="Tutor avaliando seu raciocínio...";
         const grade=await gradeWrittenAnswer(block.question||"Explique o conceito.",text);
         if(grade){
-          result.innerHTML='<div class="vt-grade"><strong>Nota '+Number(grade.score||0).toFixed(1)+'/10</strong><p>'+String(grade.feedback||grade.correction||"Resposta avaliada.")+'</p></div>';
+          result.replaceChildren();
+          const gradeBox=document.createElement("div");gradeBox.className="vt-grade";
+          const gradeScore=document.createElement("strong");gradeScore.textContent="Nota "+Number(grade.score||0).toFixed(1)+"/10";
+          const gradeFeedback=document.createElement("p");gradeFeedback.textContent=String(grade.feedback||grade.correction||"Resposta avaliada.");
+          gradeBox.append(gradeScore,gradeFeedback);result.append(gradeBox);
           await learningAction("tutor_answer",{blockId:block.id||null,type:"open_answer",score:Number(grade.score||0),topic:grade.topic||null});
         }else result.textContent="Resposta registrada. Continue e compare com os próximos exemplos.";
       },
