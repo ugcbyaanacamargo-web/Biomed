@@ -2,49 +2,16 @@ import { Sandbox } from "@vercel/sandbox";
 
 const OPENCODE_BIN="/home/vercel-sandbox/.opencode/bin/opencode";
 const DEFAULT_MODEL="muse-spark-1.3-contributor-free";
+const SAFE_PERMISSION=JSON.stringify({"*":"ask","external_directory":"deny"});
 
-const TUTOR_RULES=[
-  "Você é o Tutor BIOMED, professor virtual de fisiologia sensorial e modulação da dor.",
-  "Você existe somente para ensinar, testar, simular e avaliar respostas do aluno.",
-  "Nunca altere arquivos, repositórios, GitHub, Vercel, banco de dados, configurações ou credenciais.",
-  "Nunca execute shell, edição, subagentes ou acesso web em nome do aluno.",
-  "Nunca solicite CPF, documento, senha, token, chave ou endereço.",
-  "Não diagnostique doenças. Para saúde pessoal, explique apenas conceitos gerais.",
-  "Faça o aluno raciocinar e adapte a dificuldade ao nível e ao domínio.",
-  "Ao corrigir resposta livre, avalie mecanismo e cadeia causal, não somente palavras-chave.",
-  "Diga o que foi correto, o que faltou, o erro conceitual e proponha nova pergunta focada na lacuna.",
-  "Em múltipla escolha, use distratores plausíveis e uma única melhor resposta.",
-  "Em simulações, peça previsão antes de explicar o resultado."
-].join("\\n");
-
-function opencodeConfig(model){
-  return JSON.stringify({
-    $schema:"https://opencode.ai/config.json",
-    model:"opencode/"+model,
-    permission:{
-      "*":"ask",
-      edit:"deny",
-      bash:"deny",
-      task:"deny",
-      webfetch:"deny",
-      websearch:"deny",
-      external_directory:"deny"
-    }
-  },null,2);
-}
-
-async function setupSandbox(sbx,model){
+async function setupSandbox(sbx){
   const install=await sbx.runCommand({
     cmd:"bash",
-    args:["-lc","curl -fsSL https://opencode.ai/install | bash"]
+    args:["-lc","curl -fsSL https://opencode.ai/install | bash && mkdir -p /tmp/biomed-tutor"]
   });
   if(install.exitCode!==0){
     throw new Error("Falha ao instalar OpenCode: "+(await install.stderr()).slice(-500));
   }
-  await sbx.writeFiles([
-    {path:"/vercel/sandbox/opencode.json",content:Buffer.from(opencodeConfig(model))},
-    {path:"/vercel/sandbox/TUTOR_RULES.md",content:Buffer.from(TUTOR_RULES)}
-  ]);
 }
 
 function cleanOutput(text){
@@ -64,25 +31,27 @@ export async function runOpenCodeTutor({studentId,prompt,model=DEFAULT_MODEL,api
     runtime:"node24",
     timeout:15*60*1000,
     resources:{vcpus:1},
-    env:{OPENCODE_API_KEY:apiKey},
-    onCreate:async sandbox=>setupSandbox(sandbox,model)
+    env:{
+      OPENCODE_API_KEY:apiKey,
+      OPENCODE_PERMISSION:SAFE_PERMISSION,
+      OPENCODE_DISABLE_DEFAULT_PLUGINS:"true",
+      OPENCODE_DISABLE_CLAUDE_CODE:"true",
+      OPENCODE_DISABLE_AUTOCOMPACT:"true"
+    },
+    onCreate:async sandbox=>setupSandbox(sandbox)
   });
-
-  await sbx.writeFiles([
-    {path:"/vercel/sandbox/opencode.json",content:Buffer.from(opencodeConfig(model))},
-    {path:"/vercel/sandbox/TUTOR_RULES.md",content:Buffer.from(TUTOR_RULES)}
-  ]);
 
   const result=await sbx.runCommand({
     cmd:OPENCODE_BIN,
     args:[
+      "--pure",
       "run",
       "--model","opencode/"+model,
       "--agent","build",
       "--format","default",
       String(prompt||"").slice(0,70000)
     ],
-    cwd:"/vercel/sandbox"
+    cwd:"/tmp/biomed-tutor"
   });
 
   const stdout=cleanOutput(await result.stdout());
