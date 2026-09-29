@@ -21,26 +21,14 @@ function opencodeConfig(model){
   return JSON.stringify({
     $schema:"https://opencode.ai/config.json",
     model:"opencode/"+model,
-    agent:{
-      tutor:{
-        description:"Tutor BIOMED educacional somente leitura",
-        mode:"primary",
-        model:"opencode/"+model,
-        prompt:"{file:./TUTOR_RULES.md}",
-        permission:{
-          "*":"deny",
-          read:"allow",
-          glob:"allow",
-          grep:"allow",
-          list:"allow",
-          edit:"deny",
-          bash:"deny",
-          task:"deny",
-          webfetch:"deny",
-          websearch:"deny",
-          external_directory:"deny"
-        }
-      }
+    permission:{
+      "*":"ask",
+      edit:"deny",
+      bash:"deny",
+      task:"deny",
+      webfetch:"deny",
+      websearch:"deny",
+      external_directory:"deny"
     }
   },null,2);
 }
@@ -90,7 +78,7 @@ export async function runOpenCodeTutor({studentId,prompt,model=DEFAULT_MODEL,api
     args:[
       "run",
       "--model","opencode/"+model,
-      "--agent","tutor",
+      "--agent","build",
       "--format","default",
       String(prompt||"").slice(0,70000)
     ],
