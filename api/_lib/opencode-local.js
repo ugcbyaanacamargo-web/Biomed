@@ -4,7 +4,7 @@ import path from "node:path";
 
 const PORT=4096;
 const BASE="http://127.0.0.1:"+PORT;
-const DEADLINE_MS=12000;
+const DEADLINE_MS=Math.max(3000,Math.min(45000,Number(process.env.OPENCODE_DEADLINE_MS)||12000));
 const BIN=path.resolve("node_modules/.bin/"+(process.platform==="win32"?"opencode.cmd":"opencode"));
 
 let startPromise=null;
