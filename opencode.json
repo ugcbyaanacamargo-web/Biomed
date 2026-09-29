@@ -8,8 +8,8 @@
         "baseURL": "http://127.0.0.1:11434/v1"
       },
       "models": {
-        "qwen2.5:1.5b": {
-          "name": "Qwen2.5 1.5B BIOMED",
+        "qwen2.5:3b": {
+          "name": "Qwen2.5 3B BIOMED",
           "limit": {
             "context": 16384,
             "output": 2048
@@ -22,7 +22,7 @@
     "tutor": {
       "description": "Tutor BIOMED educacional, estritamente somente leitura",
       "mode": "primary",
-      "model": "ollama/qwen2.5:1.5b",
+      "model": "ollama/qwen2.5:3b",
       "prompt": "{file:./TUTOR_RULES.md}",
       "permission": {
         "*": "deny",
