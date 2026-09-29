@@ -14,7 +14,7 @@ export default async function handler(req,res){
     visualTutor:true,
     tutorOpenCodeZen:Boolean(process.env.OPENCODE_API_KEY),
     tutorOpenCodeRuntime:process.env.RAILWAY_ENVIRONMENT?"railway-persistent-opencode":"vercel-sandbox-persistent-server",
-    tutorDeadlineMs:12000,
+    tutorDeadlineMs:Number(process.env.OPENCODE_DEADLINE_MS||12000),
     tutorRepair:"persistent-server-fast-fallback",
     hostRuntime:process.env.RAILWAY_ENVIRONMENT?"railway":"vercel",
     tutorOpenCodeModel:String(process.env.OPENCODE_MODEL||"muse-spark-1.3-contributor-free"),
