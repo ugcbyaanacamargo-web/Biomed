@@ -1,8 +1,8 @@
 import {allowCors,json,readJson} from "./_lib/security.js";
 import {rpc,bearerToken} from "./_lib/biomed-rpc.js";
 
-const OPENCODE_ENDPOINT="https://opencode.ai/zen/v1/chat/completions";
-const OPENCODE_MODELS=["nemotron-3-ultra-free","nemotron-3.5-lightning-free","mimo-v2.6-flash-free","mimo-v2.5-free","ling-3.0-flash-fin-free","big-pickle","space-bunny-free"];
+const OPENCODE_ENDPOINT="https://opencode.ai/zen/v1/responses";
+const OPENCODE_MODELS=["muse-spark-1.3-contributor-free"];
 
 function safeMessages(messages){
   if(!Array.isArray(messages))return [];
@@ -58,12 +58,34 @@ async function callCompatible(endpoint,credential,model,messages,system){
   const res=await fetch(endpoint,{
     method:"POST",
     headers:{Authorization:"Bearer "+credential,"Content-Type":"application/json"},
-    body:JSON.stringify({model,messages:[{role:"system",content:system},...messages],temperature:.65,max_tokens:1200})
+    body:JSON.stringify({
+      model,
+      instructions:system,
+      input:messages,
+      temperature:.65,
+      max_output_tokens:1200
+    })
   });
   const text=await res.text();
   let data={};try{data=JSON.parse(text)}catch{}
-  if(!res.ok){const e=new Error(data?.error?.message||data?.message||("Modelo "+model+" falhou"));e.status=res.status;throw e}
-  const content=data?.choices?.[0]?.message?.content;
+  if(!res.ok){
+    const e=new Error(data?.error?.message||data?.message||("Modelo "+model+" falhou"));
+    e.status=res.status;
+    throw e;
+  }
+  const direct=typeof data?.output_text==="string"?data.output_text.trim():"";
+  const parts=[];
+  if(Array.isArray(data?.output)){
+    for(const item of data.output){
+      if(Array.isArray(item?.content)){
+        for(const part of item.content){
+          if(typeof part?.text==="string")parts.push(part.text);
+          else if(typeof part?.output_text==="string")parts.push(part.output_text);
+        }
+      }
+    }
+  }
+  const content=direct||parts.join("\n").trim();
   if(!content)throw new Error("Resposta vazia do modelo");
   return content;
 }
