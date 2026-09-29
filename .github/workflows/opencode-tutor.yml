@@ -20,6 +20,7 @@ jobs:
   tutor:
     if: github.event_name == 'workflow_dispatch' || startsWith(github.event.issue.title, '[BIOMED TUTOR]')
     runs-on: ubuntu-latest
+    timeout-minutes: 4
     permissions:
       contents: read
       actions: read
@@ -33,6 +34,14 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
+      - name: Validar GitHub Models gratuito
+        shell: bash
+        env:
+          GITHUB_MODELS_TOKEN: ${{ github.token }}
+        run: |
+          curl --fail-with-body --silent --show-error --max-time 30             https://models.github.ai/inference/chat/completions             -H "Authorization: Bearer $GITHUB_MODELS_TOKEN"             -H "Content-Type: application/json"             -d '{"model":"openai/gpt-4.1-mini","messages":[{"role":"user","content":"Responda apenas: BIOMED_MODELS_OK"}],"max_tokens":20}'             | tee github-models-smoke.json
+          grep -q 'BIOMED_MODELS_OK' github-models-smoke.json
+
       - name: Instalar OpenCode
         shell: bash
         run: |
@@ -45,7 +54,7 @@ jobs:
           GITHUB_MODELS_TOKEN: ${{ github.token }}
           PROMPT: ${{ github.event_name == 'workflow_dispatch' && inputs.prompt || github.event.issue.body }}
         run: |
-          opencode run             --model github-models/openai/gpt-4.1-mini             --agent tutor             --format json             "$PROMPT" | tee opencode-output.ndjson
+          timeout 100s opencode run             --model github-models/openai/gpt-4.1-mini             --agent tutor             --format json             "$PROMPT" | tee opencode-output.ndjson
 
       - name: Confirmar que o tutor respondeu
         shell: bash
