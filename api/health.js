@@ -17,8 +17,8 @@ export default async function handler(req,res){
     tutorDeadlineMs:12000,
     tutorRepair:"persistent-server-fast-fallback",
     hostRuntime:process.env.RAILWAY_ENVIRONMENT?"railway":"vercel",
-    tutorOpenCodeModel:"muse-spark-1.3-contributor-free",
-    tutorGitHubOpenCode:"opencode/muse-spark-1.3-contributor-free",
+    tutorOpenCodeModel:String(process.env.OPENCODE_MODEL||"muse-spark-1.3-contributor-free"),
+    tutorGitHubOpenCode:"opencode/"+String(process.env.OPENCODE_MODEL||"muse-spark-1.3-contributor-free"),
     tutorBrowserLLM:true,
     tutorAI:true,
     posthogConfigured:Boolean(process.env.POSTHOG_PUBLIC_KEY)
