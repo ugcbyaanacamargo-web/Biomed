@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "api/tutor.js": {
+      "maxDuration": 60
+    },
+    "api/smoke-opencode.js": {
+      "maxDuration": 60
+    }
+  }
+}
