@@ -6,6 +6,7 @@
   },
   "agent": {
     "biomed-tutor": {
+      "mode": "primary",
       "description": "Tutor pedagógico BIOMED sem acesso a ferramentas, arquivos ou terminal.",
       "temperature": 0.2,
       "permission": {
