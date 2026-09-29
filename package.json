@@ -1,0 +1,12 @@
+{
+  "name": "biomed",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@vercel/sandbox": "3.5.0"
+  }
+}
