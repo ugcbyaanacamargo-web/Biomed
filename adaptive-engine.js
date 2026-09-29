@@ -461,6 +461,13 @@ function renderTutor(){
   report.innerHTML='<span class="lab-badge">RELATÓRIO DO TUTOR</span><h3>O que fazer agora</h3><p>'+advice+'</p>'+(strong?'<small>Ponto mais forte atual: '+topics[strong].label+' ('+topicScore(strong)+'%).</small>':'');
 }
 
+window.BiomedAdaptive={
+  generateQuestion:(topic)=>generateQuestion(topic),
+  getState:()=>JSON.parse(JSON.stringify(state)),
+  getWeakestTopic:()=>weakestTopic(),
+  topics:Object.fromEntries(Object.entries(topics).map(([k,v])=>[k,{label:v.label}]))
+};
+
 renderShell();
 renderDiagnostic();
 renderTraining();
