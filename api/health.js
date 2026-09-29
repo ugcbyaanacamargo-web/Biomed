@@ -7,10 +7,9 @@ export default async function handler(req,res){
     ok:true,
     database:Boolean(BIOMED_DB.configured),
     databaseMode:"supabase-rpc",
-    tutorOpenCode:Boolean(process.env.OPENCODE_API_KEY),
-    vercelOidc:Boolean(process.env.VERCEL_OIDC_TOKEN||req.headers["x-vercel-oidc-token"]),
-    tutorAI:Boolean(process.env.OPENCODE_API_KEY||process.env.VERCEL_OIDC_TOKEN||req.headers["x-vercel-oidc-token"]),
-    preferredModel:process.env.OPENCODE_MODEL||"nemotron-3-ultra-free",
-    fallbackModel:"inclusionai/ling-3.0-flash-vl"
+    tutorOpenCodeZen:Boolean(process.env.OPENCODE_API_KEY),
+    tutorBrowserLLM:true,
+    tutorGitHubOpenCode:"ollama/qwen2.5:3b",
+    tutorAI:true
   });
 }
