@@ -1,19 +1,18 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "provider": {
-    "github-models": {
+    "ollama": {
       "npm": "@ai-sdk/openai-compatible",
-      "name": "GitHub Models Free",
+      "name": "Ollama local no GitHub Actions",
       "options": {
-        "baseURL": "https://models.github.ai/inference",
-        "apiKey": "{env:GITHUB_MODELS_TOKEN}"
+        "baseURL": "http://127.0.0.1:11434/v1"
       },
       "models": {
-        "openai/gpt-4.1-mini": {
-          "name": "GPT-4.1 mini via GitHub Models",
+        "qwen2.5:1.5b": {
+          "name": "Qwen2.5 1.5B BIOMED",
           "limit": {
-            "context": 128000,
-            "output": 4096
+            "context": 16384,
+            "output": 2048
           }
         }
       }
@@ -23,7 +22,7 @@
     "tutor": {
       "description": "Tutor BIOMED educacional, estritamente somente leitura",
       "mode": "primary",
-      "model": "github-models/openai/gpt-4.1-mini",
+      "model": "ollama/qwen2.5:1.5b",
       "prompt": "{file:./TUTOR_RULES.md}",
       "permission": {
         "*": "deny",
