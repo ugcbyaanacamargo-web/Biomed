@@ -1,4 +1,4 @@
-const SUPABASE_URL=String(process.env.SUPABASE_URL||"https://eesafxairdoygzifajgw.supabase.co").replace(/\\\/$/,"");
+const SUPABASE_URL=String(process.env.SUPABASE_URL||"https://eesafxairdoygzifajgw.supabase.co").replace(/\/$/,"");
 const SUPABASE_KEY=String(process.env.SUPABASE_PUBLISHABLE_KEY||"sb_publishable_01PF787plcwThHKGsRUnxA_17pVHebL");
 
 export async function rpc(name,args={}){

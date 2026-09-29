@@ -10,9 +10,9 @@ test("cloud benchmark stays opt-in",()=>{
   assert.match(server,/runModelBenchmark/);
 });
 
-test("benchmark compares direct free models with the same prompt",()=>{
-  assert.match(bench,/muse-spark-1\.3-contributor-free/);
-  assert.match(bench,/nemotron-3\.5-lightning-free/);
+test("benchmark compares free direct models using the Tutor structured-output shape",()=>{
+  for(const model of ["muse-spark-1.3-contributor-free","nemotron-3.5-lightning-free","mimo-v2.6-flash-free","ling-3.0-flash-fin-free"])assert.ok(bench.includes(model),model);
   assert.match(bench,/runZenTutor/);
-  assert.match(bench,/Compare Aβ, Aδ e C em três frases\./);
+  assert.match(bench,/validJson/);
+  assert.match(bench,/Responda SOMENTE JSON válido/);
 });
