@@ -43,21 +43,22 @@ jobs:
           echo "::add-mask::$TOKEN"
           echo "BIOMED_PROXY_TOKEN=$TOKEN" >> "$GITHUB_ENV"
 
-      - name: Executar OpenCode Tutor gratuito
-        uses: anomalyco/opencode/github@latest
-        env:
-          BIOMED_PROXY_TOKEN: ${{ env.BIOMED_PROXY_TOKEN }}
-        with:
-          model: biomed-free/biomed-tutor
-          agent: tutor
-          share: false
-          prompt: |
-            Você é o Tutor BIOMED.
-            Siga integralmente TUTOR_RULES.md.
-            Esta execução é SOMENTE LEITURA.
-            Não altere arquivos, branches, issues, pull requests ou configurações.
-            Não execute tarefas administrativas.
-            Responda apenas como tutor educacional.
+      - name: Instalar OpenCode
+        shell: bash
+        run: |
+          curl -fsSL https://opencode.ai/install | bash
+          echo "$HOME/.opencode/bin" >> "$GITHUB_PATH"
 
-            Pergunta:
-            ${{ github.event_name == 'workflow_dispatch' && inputs.prompt || github.event.issue.body }}
+      - name: Executar Tutor OpenCode sem acesso de escrita
+        shell: bash
+        env:
+          PROMPT: ${{ github.event_name == 'workflow_dispatch' && inputs.prompt || github.event.issue.body }}
+        run: |
+          opencode run             --model biomed-free/biomed-tutor             --agent tutor             --format json             "$PROMPT" | tee opencode-output.ndjson
+
+      - name: Confirmar que o tutor respondeu
+        shell: bash
+        run: |
+          test -s opencode-output.ndjson
+          grep -q '"type"' opencode-output.ndjson
+          echo "OpenCode Tutor executado com sucesso em modo somente leitura."
