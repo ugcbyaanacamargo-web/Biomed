@@ -2,7 +2,7 @@ import {MODULES,getModule,getLesson,nextLesson,moduleProgress,overallProgress,re
 import {renderBlocks} from "./learning-components.js";
 import {PASS_THRESHOLD,buildExam,gradeExam,bestAndLatest,recoveryMessage} from "./assessment-engine.js";
 import {mountVisualTutor,gradeWrittenAnswer,requestVisualPlan} from "./visual-tutor.js";
-import {initAnalyticsFromWindow,identifyStudent,trackLearningEvent} from "./analytics.js";
+import {bootstrapAnalytics,identifyStudent,trackLearningEvent} from "./analytics.js";
 
 const SESSION_KEY="biomed-student-session-v1";
 let profile=null,mounted=false,examRun=null,practiceMode="recommended";
@@ -233,7 +233,7 @@ async function mount(){
   mounted=true;
   const app=document.createElement("div");app.id="studyApp";app.innerHTML='<div class="app-loading">Montando seu plano de estudo...</div>';document.body.append(app);
   try{
-    initAnalyticsFromWindow();await refreshProfile();
+    await bootstrapAnalytics();await refreshProfile();
     document.body.classList.add("guided-study-active");
     app.innerHTML=shellMarkup();updateTop();
     document.querySelector("#guidedLogout").addEventListener("click",()=>{localStorage.removeItem(SESSION_KEY);location.reload()});
