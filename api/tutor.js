@@ -1,6 +1,6 @@
 import {allowCors,json,readJson} from "./_lib/security.js";
 import {rpc,bearerToken} from "./_lib/biomed-rpc.js";
-import {runOpenCodeTutor} from "./_lib/opencode-runtime.js";
+import {runZenTutor} from "./_lib/zen-client.js";
 import {normalizeTutorPlan,fallbackTutorPlan,containsUnsafeTutorContent} from "../tutor-schema.js";
 
 const DEFAULT_MODEL="muse-spark-1.3-contributor-free";
@@ -110,19 +110,19 @@ export default async function handler(req,res){
     if(!apiKey)return json(res,503,{error:"OpenCode Zen não está configurado.",code:"AI_NOT_CONFIGURED",browserFallback:"rules"});
     try{
       const requestStarted=Date.now();
-      const result=await runOpenCodeTutor({studentId:student.id||"anon",prompt,model,apiKey});
+      const result=await runZenTutor({studentId:student.id||"anon",prompt,model,apiKey});
       const parsed=maybeParse(result.content,mode);
-      console.info("biomed_tutor_ok",JSON.stringify({mode,durationMs:result.durationMs||Date.now()-requestStarted,runtime:result.runtime||"persistent-server"}));
+      console.info("biomed_tutor_ok",JSON.stringify({mode,durationMs:result.durationMs||Date.now()-requestStarted,runtime:result.runtime||"direct-zen-api"}));
       if(mode==="visual"){
         const plan=parsed&&!containsUnsafeTutorContent(parsed)?parsed:fallbackTutorPlan("A resposta da IA não passou pela validação visual. Continue por este bloco seguro.");
-        return json(res,200,{provider:"opencode",runtime:result.runtime||"persistent-server",model:result.model,durationMs:result.durationMs||0,content:"",parsed:plan,plan});
+        return json(res,200,{provider:"opencode",runtime:result.runtime||"direct-zen-api",model:result.model,durationMs:result.durationMs||0,content:"",parsed:plan,plan});
       }
-      return json(res,200,{provider:"opencode",runtime:result.runtime||"persistent-server",model:result.model,durationMs:result.durationMs||0,content:result.content,parsed});
+      return json(res,200,{provider:"opencode",runtime:result.runtime||"direct-zen-api",model:result.model,durationMs:result.durationMs||0,content:result.content,parsed});
     }catch(e){
       console.warn("biomed_tutor_fallback",JSON.stringify({mode,code:e?.code||"OPENCODE_RUNTIME_ERROR",durationMs:Number(e?.durationMs||0)}));
       if(mode==="visual"){
         const plan=fallbackTutorPlan("O Tutor IA está temporariamente indisponível. O BIOMED manteve uma atividade segura para você continuar.");
-        return json(res,200,{provider:"fallback",runtime:"local-plan",model:"BIOMED",durationMs:Number(e?.durationMs||0),code:e?.code||"OPENCODE_RUNTIME_ERROR",content:"",parsed:plan,plan});
+        return json(res,200,{provider:"fallback",runtime:"local-safe-plan",model:"BIOMED",durationMs:Number(e?.durationMs||0),code:e?.code||"OPENCODE_RUNTIME_ERROR",content:"",parsed:plan,plan});
       }
       return json(res,503,{error:"Tutor OpenCode temporariamente indisponível.",code:"OPENCODE_RUNTIME_ERROR",browserFallback:"rules",detail:String(e.message||e).slice(0,900)});
     }
