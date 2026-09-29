@@ -2,122 +2,172 @@
 
 Plataforma educacional para sensibilidade somática, nocicepção e modulação da dor.
 
-## Experiência do aluno
+## Estado atual
 
-1. **Entrada por CPF**
-   - o CPF é validado;
-   - no servidor ele é transformado em HMAC-SHA256;
-   - o CPF original não é gravado no banco;
-   - se o aluno não existir, o site pede o nome e cria o perfil;
-   - se já existir, recupera nome, nível e progresso.
+- **Produção:** https://biomed-sepia.vercel.app
+- **Banco persistente:** ativo.
+- **Cadastro por CPF:** ativo; CPF bruto não é armazenado.
+- **Ranking global:** ativo pelo banco persistente.
+- **Tutor IA no navegador:** ativo com WebLLM + Qwen, sem API.
+- **OpenCode no GitHub:** ativo com Ollama + Qwen local no próprio runner, sem API externa.
+- **OpenCode Zen:** opcional; usado somente se uma chave Zen for configurada.
 
-2. **Painel personalizado**
-   - domínio global;
-   - XP;
-   - precisão;
-   - missão recomendada;
-   - mapa de domínio por tema;
-   - prova de nível;
-   - evolução Bronze → Prata → Ouro → Diamante.
+## Fluxo do aluno
 
-3. **Tutor BIOMED**
-   - chat por texto;
-   - explicação personalizada;
-   - geração de perguntas novas;
-   - simulações;
-   - avaliação de resposta aberta de 0 a 10;
-   - feedback e nova pergunta focada na lacuna.
-
-4. **Laboratório adaptativo**
-   - diagnóstico;
-   - perguntas variáveis;
-   - respostas abertas;
-   - simulações;
-   - casos clínicos em etapas;
-   - mapa de domínio.
-
-5. **Ranking**
-   - usa domínio, provas, simulações/casos, retenção, consistência e respostas abertas;
-   - chat isolado não aumenta ranking;
-   - exibe nome mascarado, nunca CPF.
+1. O aluno informa o CPF.
+2. Se for o primeiro acesso, informa o nome.
+3. O servidor transforma o CPF em HMAC-SHA256 com um segredo mantido no banco.
+4. O banco cria uma sessão aleatória de 30 dias e guarda apenas o hash da sessão.
+5. O painel recupera nível, XP, domínio, provas, simulações e histórico.
+6. O motor recomenda a próxima atividade.
+7. O aluno progride em **Bronze → Prata → Ouro → Diamante**.
 
 ## Métrica de aprendizagem
 
-Learning Score:
+**Learning Score**
 
 - 40% domínio por tópico;
 - 25% provas;
 - 15% simulações e casos;
 - 10% retenção;
 - 5% consistência;
-- 5% qualidade de respostas abertas.
+- 5% qualidade das respostas abertas.
+
+O chat isolado não aumenta a posição no ranking.
 
 ### Níveis
 
-- **Bronze** — entrada e fundamentos.
-- **Prata** — score ≥45, diagnóstico, ao menos 4 módulos e prova ≥60%.
+- **Bronze** — fundamentos.
+- **Prata** — score ≥45, diagnóstico concluído, pelo menos 4 módulos e prova ≥60%.
 - **Ouro** — score ≥70, todos os tópicos ≥70%, prova ≥75% e práticas aprovadas.
-- **Diamante** — score ≥88, tópicos ≥85%, prova ≥85%, retenção ≥80% e respostas abertas fortes.
+- **Diamante** — score ≥88, tópicos ≥85%, prova ≥85%, retenção ≥80% e forte desempenho em respostas abertas.
 
-## OpenCode
+## Tutor BIOMED
 
-O projeto contém dois caminhos separados:
+O chat possui três camadas:
 
-### Tutor no site
-A função `/api/tutor` usa a API OpenCode Zen e tenta, em ordem, modelos gratuitos compatíveis:
+### 1. OpenCode Zen opcional
 
-- `nemotron-3.5-lightning-free`
-- `mimo-v2.6-flash-free`
-- `ling-3.0-flash-fin-free`
-- `space-bunny-free`
+Se `OPENCODE_API_KEY` estiver configurado, a função `/api/tutor` tenta os modelos gratuitos atuais do OpenCode Zen.
 
-O CPF e o nome do aluno **não são enviados ao modelo**.
+### 2. WebLLM local no navegador
 
-### OpenCode dentro do GitHub
-`.github/workflows/opencode-tutor.yml` executa OpenCode no GitHub Actions em modo somente leitura.
+Sem chave externa, o site carrega sob demanda:
 
-`opencode.json` bloqueia:
-- edição;
-- escrita;
-- bash;
-- subagentes;
-- web;
-- diretórios externos.
+`Qwen3-0.6B-q4f16_1-MLC`
 
-Mesmo que um aluno escreva uma instrução para alterar o repositório, o Tutor não recebe permissões de escrita.
+A inferência ocorre no navegador via WebGPU. O modelo é baixado somente quando o aluno realmente precisa do chat e depois pode ser reaproveitado pelo cache do navegador.
 
-## Banco de dados
+Se o dispositivo não oferecer WebGPU, permanece disponível o motor pedagógico determinístico do BIOMED.
 
-O repositório é público, portanto dados pessoais **não são gravados em arquivos GitHub**.
+### 3. OpenCode no GitHub Actions
 
-O código e o schema ficam no GitHub em:
+O workflow:
 
-`db/schema.sql`
+`.github/workflows/opencode-tutor.yml`
 
-Os registros de alunos ficam em banco persistente configurado pelo servidor.
+instala **Ollama**, baixa **Qwen2.5 3B** no runner e executa:
 
-Variáveis necessárias na Vercel:
+`opencode run --model ollama/qwen2.5:3b --agent tutor`
 
-```env
-SUPABASE_URL=
-SUPABASE_SERVICE_ROLE_KEY=
-CPF_HMAC_SECRET=
-SESSION_SECRET=
-OPENCODE_API_KEY=
-OPENCODE_MODEL=nemotron-3.5-lightning-free
-ALLOWED_ORIGIN=https://biomed-sepia.vercel.app
-```
+Portanto o OpenCode do GitHub não depende de OpenCode Zen, Vercel AI Gateway ou chave de API.
 
-Enquanto o banco não estiver conectado, o frontend entra em **modo local** e salva o perfil apenas no navegador. Isso permite testar o fluxo, mas não oferece reconhecimento entre aparelhos nem ranking global.
+O agente `tutor` é somente leitura:
+
+- edição: negada;
+- shell pelo agente: negado;
+- subagentes: negados;
+- web: negada;
+- diretórios externos: negados;
+- checkout sem credencial persistente;
+- workflow com permissões GitHub somente de leitura.
+
+## Conteúdo adaptativo
+
+O motor combina variáveis de:
+
+- estímulo;
+- região corporal;
+- receptor;
+- Aβ / Aδ / C;
+- via sensorial;
+- atenção;
+- ansiedade;
+- estresse;
+- contexto;
+- estimulação tátil;
+- controle descendente;
+- situação clínica.
+
+Recursos:
+
+- diagnóstico inicial;
+- perguntas variáveis;
+- perguntas abertas;
+- correção de 0 a 10;
+- casos em etapas;
+- simulações;
+- questões contrafactuais;
+- prova de nível;
+- revisão de retenção;
+- detecção de confusões;
+- mapa de domínio;
+- recomendação da próxima atividade.
+
+A base pedagógica interna está em:
+
+`data/knowledge-base.json`
+
+## Banco persistente
+
+A conta Supabase atingiu o limite de projetos gratuitos, então não foi possível criar outro projeto físico sem liberar uma vaga.
+
+Para não interromper a implantação, o BIOMED foi isolado dentro do projeto Supabase conectado usando somente objetos com prefixo `biomed_`.
+
+Objetos principais:
+
+- `biomed_students`
+- `biomed_events`
+- `biomed_sessions`
+- `biomed_private_config`
+
+RPCs públicas controladas:
+
+- `biomed_auth`
+- `biomed_profile`
+- `biomed_record_event`
+- `biomed_ranking`
+
+As tabelas têm RLS ativa e não possuem políticas públicas de leitura/escrita. Helpers internos tiveram EXECUTE revogado para `anon` e `authenticated`.
+
+O CPF original não é persistido. Apenas o HMAC é salvo.
+
+## Ranking
+
+O ranking exibe:
+
+- posição;
+- primeiro nome + inicial;
+- nível;
+- Learning Score;
+- XP.
+
+Nunca exibe CPF.
 
 ## Arquivos principais
 
-- `index.html` — conteúdo principal
-- `styles.css` — design didático
-- `student.css` — portal do aluno
-- `app.js` — navegação
-- `adaptive-engine.js` — motor adaptativo
-- `student-app.js` — autenticação, painel, tutor, ranking e provas
+- `index.html`
+- `styles.css`
+- `student.css`
+- `app.js`
+- `adaptive-engine.js`
+- `student-app.js`
+- `learning-bridge.js`
+- `browser-tutor.js`
+- `data/knowledge-base.json`
+- `opencode.json`
+- `TUTOR_RULES.md`
+- `.github/workflows/opencode-tutor.yml`
 - `api/auth.js`
 - `api/profile.js`
 - `api/event.js`
@@ -125,10 +175,7 @@ Enquanto o banco não estiver conectado, o frontend entra em **modo local** e sa
 - `api/tutor.js`
 - `api/health.js`
 - `db/schema.sql`
-- `TUTOR_RULES.md`
 
 ## Deploy
 
-Site: https://biomed-sepia.vercel.app
-
-O projeto continua compatível com deploy automático da branch `main` na Vercel.
+A branch `main` publica automaticamente na Vercel.
