@@ -15,6 +15,7 @@ export default async function handler(req,res){
     tutorOpenCodeZen:Boolean(process.env.OPENCODE_API_KEY),
     tutorOpenCodeRuntime:"vercel-sandbox-persistent-server",
     tutorDeadlineMs:12000,
+    tutorRepair:"persistent-server-fast-fallback",
     tutorOpenCodeModel:"muse-spark-1.3-contributor-free",
     tutorGitHubOpenCode:"opencode/muse-spark-1.3-contributor-free",
     tutorBrowserLLM:true,
