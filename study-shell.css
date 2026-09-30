@@ -1,5 +1,4 @@
 body.guided-study-active{background:#f3f7fb;overflow-x:hidden}
-body.guided-study-active .topbar,body.guided-study-active .layout,body.guided-study-active #searchDialog{display:none!important}
 #studyApp{min-height:100vh;color:#142438;background:radial-gradient(circle at 90% 0,#e9f5ff 0,transparent 28%),#f4f8fb;font-family:Inter,system-ui,sans-serif}
 .study-shell{display:grid;grid-template-columns:270px minmax(0,1fr);min-height:100vh}
 .study-nav{position:sticky;top:0;height:100vh;overflow:auto;background:#0d2234;color:#eaf4fb;padding:24px 18px;display:flex;flex-direction:column;gap:18px;z-index:30}
