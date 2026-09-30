@@ -13,3 +13,13 @@ test("legacy long layout is hidden when guided app is active",()=>{
   assert.ok(css.includes("guided-study-active .layout"));
   assert.ok(js.includes("Continuar estudando"));
 });
+
+test('restored sessions do not show the login screen while loading', async()=>{
+  const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
+  const auth=await readFile(new URL('../auth.js',import.meta.url),'utf8');
+  assert.ok(html.includes('biomed-restoring-session'));
+  assert.ok(html.includes('biomedBoot'));
+  assert.ok(html.indexOf('localStorage.getItem(')<html.indexOf('<main id="authGate"'));
+  assert.ok(js.includes("classList.add('biomed-ready')"));
+  assert.ok(auth.includes('classList.remove("biomed-restoring-session","biomed-ready")'));
+});
