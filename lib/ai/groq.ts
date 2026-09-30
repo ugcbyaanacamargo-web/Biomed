@@ -40,11 +40,16 @@ function modelMessages(context:TutorContext){
   ];
 }
 
-function cleanJsonSchema(schema:unknown){
+export function cleanJsonSchema(schema:unknown):unknown{
+  if(Array.isArray(schema))return schema.map(cleanJsonSchema);
   if(!schema||typeof schema!=="object")return schema;
-  const copy=structuredClone(schema as Record<string,unknown>);
-  delete (copy as Record<string,unknown>).$schema;
-  return copy;
+  const source=schema as Record<string,unknown>;
+  const cleaned:Record<string,unknown>={};
+  for(const [key,value] of Object.entries(source)){
+    if(key==="$schema"||key==="format")continue;
+    cleaned[key]=cleanJsonSchema(value);
+  }
+  return cleaned;
 }
 
 async function callGroq(body:Record<string,unknown>):Promise<GroqResponse>{
@@ -64,8 +69,14 @@ async function callGroq(body:Record<string,unknown>):Promise<GroqResponse>{
   let data:GroqResponse={};
   try{data=text?JSON.parse(text) as GroqResponse:{}}catch{}
   if(!response.ok){
-    const message=String(data.error?.message||data.message||`Groq HTTP ${response.status}`);
-    const error=Object.assign(new Error(message),{status:response.status});
+    const providerMessage=String(data.error?.message||data.message||`Groq HTTP ${response.status}`);
+    if(response.status===429){
+      const retryAfter=response.headers.get("retry-after");
+      throw Object.assign(new Error("A cota gratuita da IA foi atingida temporariamente. Sua mensagem ficou salva; tente novamente em alguns minutos."),{
+        status:429,retryable:true,retryAfter,providerMessage
+      });
+    }
+    const error=Object.assign(new Error(providerMessage),{status:response.status,providerMessage});
     throw error;
   }
   return data;

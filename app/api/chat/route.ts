@@ -41,6 +41,11 @@ export async function POST(request:Request){
       p_content:body.message,p_metadata:body.interaction?{interaction:body.interaction}:{}
     });
 
+    if(!begin.duplicate&&studentId)after(()=>captureEvent(studentId,"message_sent",{
+      conversation_id:body.conversationId,
+      interaction:Boolean(body.interaction)
+    }));
+
     if(begin.duplicate){
       const snapshot=await rpc<any>("biomed_ai_get_conversation",{
         p_token:token,p_conversation_id:body.conversationId,p_limit:200
@@ -98,7 +103,8 @@ export async function POST(request:Request){
       }));
       await Promise.allSettled(tasks);
     });
-    const status=/429|rate.?limit|quota/i.test(message)?429:/timeout|timed out/i.test(message)?504:undefined;
+    const errorStatus=Number((error as {status?:number})?.status||0);
+    const status=errorStatus===429?429:/timeout|timed out|aborted/i.test(message)?504:undefined;
     if(status)return noStoreJson({error:message,retryable:true,traceId},status);
     return apiError(error,"Falha no Tutor");
   }
