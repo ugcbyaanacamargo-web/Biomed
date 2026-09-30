@@ -274,8 +274,9 @@ mensagens + memória
 mensagens + memória
 → GPT-OSS 120B + browser_search
 → resposta textual com fontes
-→ persistir resposta
-→ atualizar memória pedagógica por regra do servidor ou em atualização posterior quando necessário
+→ persistir resposta e fontes em metadata
+→ se o turno alterar domínio, lacunas ou plano: fazer uma segunda chamada curta ao GPT-OSS 120B com Structured Outputs apenas para atualizar o estado pedagógico
+→ se não alterar o estado pedagógico: nenhuma segunda chamada
 ```
 
 Busca web nunca é obrigatória para perguntas conceituais estáveis.
@@ -322,7 +323,7 @@ Responsabilidades:
 
 ### `DELETE /api/conversations/:id`
 
-Arquiva ou remove uma conversa do aluno conforme política definida na implementação.
+Faz **soft delete**: muda a conversa para `status='archived'`. As mensagens permanecem no banco para integridade do histórico e não aparecem na lista normal. Exclusão física não faz parte desta reconstrução.
 
 ## 12. Prompt permanente do Tutor
 
@@ -452,15 +453,13 @@ A aplicação autenticada deve ter apenas três áreas principais:
 
 Não haverá dashboard obrigatório antes do Tutor.
 
-## 18. Streaming
+## 18. Entrega da resposta
 
-A arquitetura deve permitir resposta progressiva.
+A primeira versão desta reconstrução usa **resposta completa, não streaming**, porque o estado pedagógico estruturado e sua persistência precisam ser validados como uma única unidade antes de serem aceitos.
 
-Se a implementação via Vercel Functions suportar streaming de forma confiável no stack atual, usar streaming da Groq para reduzir percepção de latência.
+Enquanto a Groq responde, a interface mostra estado claro de geração ("Tutor está pensando...") sem bloquear a navegação do histórico.
 
-Se a persistência estruturada exigir resposta completa antes da gravação final, o backend pode acumular o stream, mostrar texto progressivamente e persistir a resposta somente após o encerramento com sucesso.
-
-Falha no meio de stream não deve gravar resposta incompleta como válida.
+Streaming fica fora do escopo desta reconstrução e só poderá ser adicionado depois sem alterar o modelo de dados ou a API pública. Nenhuma resposta parcial é persistida como mensagem válida.
 
 ## 19. Segurança
 
