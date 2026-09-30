@@ -1,6 +1,6 @@
 "use client";
 import {useCallback,useEffect,useMemo,useState} from "react";
-import {Brain,ChevronRight,Menu,MessageCirclePlus,MoreHorizontal,Plus,Trash2,X} from "lucide-react";
+import {ArrowRight,Brain,ChevronRight,Menu,MessageCirclePlus,MoreHorizontal,Plus,Trash2,X} from "lucide-react";
 import {Conversation,ConversationContent,ConversationScrollButton} from "@/components/ai-elements/conversation";
 import {Message,MessageContent,MessageResponse} from "@/components/ai-elements/message";
 import {Composer} from "./composer";

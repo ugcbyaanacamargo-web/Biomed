@@ -7,11 +7,11 @@ describe("richTutorTurnSchema",()=>{
       schemaVersion:1,
       message:"Vamos comparar as fibras.",
       blocks:[
-        {type:"diagram",variant:"neural_path",title:"Via sensorial",nodes:[
+        {type:"diagram",variant:"neural_path",title:"Via sensorial",caption:"Caminho do estímulo.",nodes:[
           {id:"skin",label:"Receptor",kind:"receptor"},
           {id:"cord",label:"Medula",kind:"spinal_cord"}
         ],edges:[{from:"skin",to:"cord",label:"aferência"}]},
-        {type:"choice",id:"fiber-speed",question:"Qual é mais lenta?",options:[
+        {type:"choice",id:"fiber-speed",question:"Qual é mais lenta?",multiple:false,options:[
           {label:"Aβ",value:"abeta"},{label:"C",value:"c"}
         ]}
       ],
