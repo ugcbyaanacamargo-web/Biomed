@@ -255,6 +255,7 @@ async function mount(){
     await bootstrapAnalytics();await refreshProfile();
     document.body.classList.add("guided-study-active");
     app.innerHTML=shellMarkup();updateTop();
+    document.documentElement.classList.add('biomed-ready');
     document.querySelector("#guidedLogout").addEventListener("click",()=>{localStorage.removeItem(SESSION_KEY);location.reload()});
     document.querySelector("#mobileMenu").addEventListener("click",()=>document.querySelector("#studyNav").classList.toggle("open"));
     window.addEventListener("hashchange",render);
@@ -262,6 +263,7 @@ async function mount(){
   }catch(e){
     mounted=false;
     if(e?.status===401){localStorage.removeItem(SESSION_KEY);app.remove();document.body.classList.remove("student-authenticated","guided-study-active");window.dispatchEvent(new CustomEvent("biomed:auth-expired"));return}
+    document.documentElement.classList.add('biomed-ready');
     app.innerHTML='<div class="app-error" style="margin:30px"><strong>Não consegui carregar seu plano.</strong><p>'+esc(e.message)+'</p></div>';
   }
 }
