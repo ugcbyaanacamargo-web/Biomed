@@ -1,387 +1,674 @@
-# BIOMED — Tutor IA Conversacional como Aplicação Principal
+# BIOMED — Tutor IA Conversacional com Conteúdo Rico Gerado por IA
 
 **Data:** 2026-09-30  
-**Status:** design aprovado em conversa; aguardando revisão da especificação antes do plano de implementação.
+**Status:** revisão arquitetural após aprovação do conceito AI-first; aguardando revisão final desta versão antes do plano de implementação.
 
-## 1. Objetivo
+## 1. Resultado pretendido
 
-Reconstruir o BIOMED para que o **Tutor IA seja a própria experiência de aprendizagem**.
+O BIOMED será reconstruído como um **ambiente de estudo conversacional dirigido por IA**.
 
-O aluno não deve navegar por um curso rígido composto por páginas, módulos, aulas fixas, prática separada, biblioteca separada e provas controladas pelo frontend. Depois do login, a experiência principal deve ser uma conversa contínua com um professor de IA que:
+Depois do login, o aluno não entra em um dashboard de aulas fixas. Ele entra diretamente em uma conversa contínua com o Tutor BIOMED. O Tutor:
 
-- descobre o nível do aluno;
-- define o que estudar;
-- gera o conteúdo;
-- explica;
-- pergunta;
-- corrige;
-- adapta a dificuldade;
-- revisa lacunas;
-- cria exercícios e casos;
-- decide quando avançar;
-- registra memória e progresso;
-- retoma exatamente de onde o aluno parou.
+- descobre o que o aluno já sabe;
+- cria e modifica o plano individual de estudo;
+- gera explicações e exemplos;
+- cria conteúdo visual;
+- cria diagramas e fluxos;
+- cria botões e escolhas;
+- cria questões e casos;
+- corrige respostas;
+- identifica confusões;
+- acompanha domínio;
+- decide quando revisar ou avançar;
+- retoma o ensino em outro dispositivo;
+- consulta a web quando informação atual for necessária.
 
-O site fornece interface, autenticação, persistência, segurança e visualização do estado. A decisão pedagógica pertence ao Tutor IA.
+A aplicação deixa de conter um "curso pronto" concorrendo com a IA.
 
-## 2. Princípio central
+> **O Tutor é a aplicação. O frontend é o ambiente visual, seguro e persistente em que o Tutor trabalha.**
 
-A regra permanente passa a ser:
+## 2. Problema da arquitetura atual
 
-> **O Tutor é a aplicação.**
+O repositório atual distribui responsabilidade pedagógica entre vários motores:
 
-Fluxo principal:
+- `data/course-model.js` define sequência e conteúdo fixos;
+- `study-platform.js` decide telas e fluxo;
+- `assessment-engine.js` gera avaliações locais;
+- `visual-tutor.js` encaixa a IA em uma atividade predefinida;
+- `tutor-schema.js` descreve um formato orientado a "telas";
+- `learning-components.js` mantém outra camada de apresentação pedagógica.
+
+Isso transforma o modelo em complemento de uma aplicação rígida.
+
+A reconstrução inverte essa relação:
 
 ```
-Aluno
+ANTES
+
+curso hardcoded
   ↓
-Login
+frontend decide aula
   ↓
-Conversa atual + histórico + memória pedagógica
+frontend decide atividade
   ↓
-GPT-OSS 120B na Groq
+IA preenche parte da atividade
+
+
+DEPOIS
+
+memória do aluno + currículo amplo + conversa
   ↓
-resposta conversacional + atualização do estado pedagógico
+GPT-OSS 120B decide o próximo ato pedagógico
   ↓
-persistência no Supabase
+gera narrativa + conteúdo rico + interação + atualização de domínio
   ↓
-próximo turno
+frontend somente valida e renderiza
 ```
 
-Não existe outro agente, OpenCode, Sandbox, Railway ou AI Gateway no caminho.
+## 3. Stack definitiva
 
-## 3. Experiência do aluno
+O frontend autenticado será substituído por **uma aplicação Next.js App Router + React + TypeScript**.
 
-Após autenticação, o aluno entra diretamente no Tutor.
+Stack:
 
-A interface deve se aproximar de um chat moderno:
+- Next.js App Router;
+- React;
+- TypeScript;
+- Tailwind CSS;
+- shadcn/ui para primitivas;
+- Vercel AI Elements somente nos elementos de chat apropriados;
+- componentes próprios BIOMED para conteúdo educacional rico;
+- AI SDK v6 como camada de UI/integração quando útil;
+- `@ai-sdk/groq` para chamar a Groq diretamente;
+- **sem Vercel AI Gateway**;
+- GPT-OSS 120B como modelo principal;
+- Supabase PostgreSQL como persistência;
+- PostHog para produto e AI Observability;
+- Vercel para deploy.
 
-```
-┌───────────────────┬───────────────────────────────────────┐
-│ BIOMED            │ Tutor BIOMED                          │
-│                   │                                       │
-│ + Nova conversa   │ histórico da conversa                 │
-│                   │                                       │
-│ Conversas         │ Tutor ↔ Aluno                         │
-│ anteriores        │                                       │
-│                   │                                       │
-│ Progresso         │                                       │
-│ resumido          │                                       │
-│                   │                                       │
-│ Conta / sair      │ [ Converse com seu tutor... ] [Enviar]│
-└───────────────────┴───────────────────────────────────────┘
-```
-
-No celular, a barra lateral vira menu recolhível e a conversa ocupa a tela.
-
-A navegação principal não deve competir com o chat. O aluno não precisa decidir entre "aula", "prática", "prova" ou "biblioteca". Essas experiências são iniciadas pela própria conversa.
-
-## 4. Papel do Tutor IA
-
-O Tutor deve agir como professor de Biomedicina, não como FAQ.
-
-A cada turno ele deve decidir pedagogicamente entre ações como:
-
-- diagnosticar conhecimento prévio;
-- explicar;
-- simplificar;
-- aprofundar;
-- comparar;
-- dar analogia;
-- usar exemplo;
-- fazer pergunta;
-- pedir justificativa;
-- criar múltipla escolha;
-- criar resposta aberta;
-- criar caso clínico;
-- criar revisão;
-- testar retenção;
-- corrigir;
-- identificar confusão;
-- registrar domínio;
-- alterar o plano;
-- avançar;
-- voltar;
-- pesquisar a web quando informação atual for necessária.
-
-A conversa deve parecer natural. O aluno pode interromper, mudar de assunto, pedir nova explicação, responder parcialmente ou fazer perguntas livres.
-
-## 5. Currículo
-
-O currículo deixa de ser uma sequência de aulas hardcoded.
-
-O BIOMED mantém apenas um **mapa curricular de objetivos**, suficiente para orientar o Tutor:
-
-- sensibilidade somática;
-- receptores sensoriais;
-- transdução;
-- fibras Aβ, Aδ e C;
-- vias ascendentes;
-- processamento medular e encefálico;
-- nocicepção;
-- dor;
-- modulação;
-- controle descendente;
-- integração clínica.
-
-O GPT-OSS 120B cria e adapta o plano individual do aluno a partir desse mapa.
-
-O sistema não deve exigir que todos façam a mesma ordem, o mesmo número de aulas ou os mesmos exercícios.
-
-## 6. Conversas persistentes
-
-A Groq não mantém estado conversacional por conta própria. O BIOMED deve persistir as conversas e reenviar o contexto necessário em cada chamada.
-
-### 6.1 Tabelas
-
-Criar:
+A utilização de `@ai-sdk/groq` é apenas um SDK de cliente. O fluxo continua direto:
 
 ```
-biomed_ai_conversations
-- id uuid primary key
-- student_id uuid not null
-- title text
-- status text
-- current_goal text
-- memory_summary text
-- study_state jsonb
-- created_at timestamptz
-- updated_at timestamptz
-- last_message_at timestamptz
+BIOMED → Groq → openai/gpt-oss-120b
 ```
 
-```
-biomed_ai_messages
-- id uuid primary key
-- conversation_id uuid not null
-- student_id uuid not null
-- role text check ('user','assistant','system')
-- content text
-- metadata jsonb
-- created_at timestamptz
-```
+Não existe roteador/modelo intermediário.
+
+## 4. Migração limpa, sem aplicação antiga por baixo
+
+Esta reconstrução não será adicionada "por cima" da aplicação atual.
+
+A nova aplicação será construída em branch isolada e só substituirá a produção quando o fluxo novo estiver completo e validado.
+
+Após o corte, arquivos substituídos serão apagados.
+
+### 4.1 Candidatos obrigatórios a remoção
+
+Quando suas funções estiverem totalmente substituídas:
+
+- `index.html`
+- `auth.js`
+- `auth.css`
+- `study-platform.js`
+- `study-shell.css`
+- `learning-components.js`
+- `learning-components.css`
+- `visual-tutor.js`
+- `tutor-schema.js`
+- `assessment-engine.js`
+- `data/course-model.js`
+- `data/knowledge-base.json`
+- `server.js`
+- APIs antigas de aprendizagem que não tiverem consumidor;
+- testes que validem comportamento removido;
+- documentação antiga que descreva arquitetura substituída.
+
+Nenhum arquivo legado deve permanecer apenas "porque talvez seja útil".
+
+### 4.2 Conteúdo visual reaproveitável
+
+SVGs antigos só permanecem se tiverem uso real no novo renderer.
+
+Os que forem usados serão movidos para uma estrutura explícita, por exemplo:
 
 ```
-biomed_ai_memory
-- student_id uuid primary key
-- long_term_summary text
-- study_plan jsonb
-- strengths jsonb
-- weaknesses jsonb
-- mastered_topics jsonb
-- current_focus text
-- recent_misconceptions jsonb
-- updated_at timestamptz
+public/
+  biomed/
+    diagrams/
+      receptors.svg
+      fibers.svg
+      gate-control.svg
+      descending-control.svg
 ```
 
-### 6.2 Regras
+Depois disso, a pasta antiga de assets é removida.
 
-- Toda mensagem do aluno deve ser persistida antes ou junto da geração.
-- Toda resposta válida do Tutor deve ser persistida.
-- O histórico da conversa deve sobreviver a logout, troca de dispositivo e nova sessão.
-- A memória pedagógica pertence ao aluno, não a uma única conversa.
-- Uma conversa nova continua podendo usar a memória pedagógica acumulada.
-- O aluno pode abrir uma conversa antiga e continuar de onde parou.
+### 4.3 Banco legado
 
-## 7. Contexto enviado ao modelo
+Dados antigos não serão apagados durante o corte inicial.
 
-Cada chamada deve incluir, nessa ordem lógica:
+Depois que a nova memória pedagógica estiver validada:
 
-1. instrução permanente do Tutor;
-2. currículo/objetivos permitidos;
-3. memória pedagógica do aluno;
-4. resumo da conversa quando necessário;
-5. janela recente de mensagens;
-6. nova mensagem do aluno.
+1. extrair informação útil do estado antigo;
+2. converter para a nova memória;
+3. gerar snapshot/migração;
+4. verificar;
+5. somente então propor remoção de tabelas BIOMED obsoletas.
 
-O sistema não deve reenviar indefinidamente todo o histórico bruto. Quando uma conversa crescer, deve gerar e armazenar um resumo fiel das partes antigas e manter apenas uma janela recente verbatim.
+Tabelas não relacionadas ao BIOMED no mesmo projeto Supabase jamais entram nessa limpeza.
 
-Essa estratégia reduz tokens sem perder continuidade.
+## 5. Experiência visual
 
-## 8. Resposta do modelo
+O design deve ser de produto educacional contemporâneo, não de painel administrativo e não de "chat genérico roxo".
 
-Para conversas normais, usar **Structured Outputs** do GPT-OSS 120B para que uma única geração retorne:
+Direção:
+
+- base clara, limpa e clínica;
+- azul profundo / teal como identidade;
+- tipografia Geist;
+- alto contraste e leitura confortável;
+- mensagens do Tutor integradas ao conteúdo visual;
+- muito espaço respirável;
+- animações pequenas e funcionais;
+- ícones consistentes;
+- mobile-first;
+- dark mode opcional, não obrigatório para a primeira entrega.
+
+Layout desktop:
+
+```
+┌──────────────────────┬───────────────────────────────────────────────┐
+│ BIOMED               │ Tutor BIOMED                                  │
+│                      │                                               │
+│ + Nova conversa      │ [mensagem]                                    │
+│                      │ [diagrama / comparação / exercício]           │
+│ Hoje                 │ [mensagem]                                    │
+│ • Fibras Aδ e C      │ [botões / resposta]                           │
+│ • Modulação          │                                               │
+│                      │                                               │
+│ Anteriores           │                                               │
+│ • Nocicepção         │                                               │
+│                      │                                               │
+│ ─────────────        │                                               │
+│ Progresso            │                                               │
+│ Fibras      55%      │                                               │
+│ Vias        20%      │                                               │
+│                      │                                               │
+│ Perfil / sair        │ [ Escreva para o Tutor...              ] [↑]  │
+└──────────────────────┴───────────────────────────────────────────────┘
+```
+
+No celular:
+
+- conversa ocupa a tela;
+- histórico/progresso abre em drawer;
+- compositor permanece acessível;
+- botões e exercícios têm área de toque adequada.
+
+## 6. Chat não significa texto simples
+
+A conversa é a estrutura principal, mas uma resposta do Tutor pode conter vários **blocos pedagógicos ricos**.
+
+Uma mensagem da IA pode ser:
+
+```
+Tutor:
+"Você entendeu por que a mielina importa. Agora veja como isso muda
+a velocidade entre Aβ, Aδ e C."
+
+[ desenho da fibra e mielina ]
+
+[ comparação Aβ × Aδ × C ]
+
+Tutor:
+"Sem decorar: qual delas tende a conduzir mais lentamente?"
+
+[ Aβ ] [ Aδ ] [ C ]
+```
+
+Tudo isso é **um turno da mesma conversa**.
+
+## 7. BIOMED Rich Learning UI
+
+O modelo não gera HTML, JSX, CSS ou JavaScript.
+
+Ele produz uma linguagem de apresentação estruturada e versionada. O renderer transforma essa estrutura em componentes React bonitos, acessíveis e seguros.
+
+### 7.1 Envelope de um turno
+
+Exemplo conceitual:
 
 ```json
 {
-  "message": "texto natural mostrado ao aluno",
-  "learning": {
-    "mode": "teach",
-    "currentGoal": "entender fibras C",
-    "nextGoal": "relacionar mielina e velocidade",
-    "progress": 32,
-    "mastered": ["Aβ"],
-    "struggling": ["diferença Aδ x C"],
-    "misconceptions": []
-  },
-  "interaction": {
-    "type": "free_text",
-    "question": "",
-    "options": []
-  },
-  "conversation": {
-    "suggestedTitle": "Fibras Aδ e C",
-    "shouldSummarize": false
-  }
+  "schemaVersion": 1,
+  "message": "Agora compare estas fibras pelo mecanismo, não pelo nome.",
+  "blocks": [
+    {
+      "type": "diagram",
+      "variant": "neural_path",
+      "title": "Velocidade de condução",
+      "nodes": [],
+      "edges": []
+    },
+    {
+      "type": "comparison",
+      "title": "Aβ × Aδ × C",
+      "columns": []
+    },
+    {
+      "type": "choice",
+      "question": "Qual tende a conduzir mais lentamente?",
+      "options": []
+    }
+  ],
+  "learning": {},
+  "conversation": {}
 }
 ```
 
-O frontend mostra apenas `message` e, quando presente, controles de interação simples.
+### 7.2 Registro inicial de blocos
 
-O restante atualiza silenciosamente memória e progresso.
+O renderer suportará inicialmente:
 
-## 9. Tipos de interação
+- `markdown` — explicação formatada;
+- `callout` — conceito-chave, alerta ou resumo;
+- `diagram` — desenho SVG semântico;
+- `comparison` — comparação visual;
+- `steps` — processo em etapas;
+- `timeline` — sequência temporal/fisiológica;
+- `table` — tabela responsiva;
+- `flashcards` — cartões de revisão;
+- `choice` — opções clicáveis;
+- `true_false`;
+- `short_answer`;
+- `case` — caso clínico em card;
+- `sequence` — ordenar elementos;
+- `progress` — atualização visual de domínio;
+- `sources` — fontes usadas em pesquisa web;
+- `suggestions` — possíveis caminhos de continuação.
 
-O chat continua sendo a interface principal, mas pode renderizar controles dentro da conversa.
+O registro é extensível. Novo tipo só entra após componente, schema e teste.
 
-Tipos permitidos inicialmente:
+## 8. Desenhos gerados pela IA
 
-- `free_text`
-- `multiple_choice`
-- `true_false`
-- `short_answer`
-- `case_question`
-- `continue`
+"Gerar desenho" não significa permitir SVG arbitrário do modelo.
 
-Esses controles não formam um segundo motor de aulas. Eles são apenas maneiras de responder ao Tutor.
+O Tutor gera uma **descrição semântica de diagrama**.
 
-Quando o aluno clica numa opção, o valor escolhido vira uma mensagem normal do aluno e entra no histórico.
-
-## 10. Pesquisa na internet
-
-O GPT-OSS 120B suporta `browser_search` na Groq.
-
-A ferramenta deve ser habilitada apenas quando:
-
-- o aluno pedir explicitamente pesquisa;
-- a pergunta depender de informação atual;
-- houver diretriz, artigo, notícia, guideline ou recomendação recente;
-- o Tutor identificar que conhecimento desatualizado poderia prejudicar a resposta.
-
-Como `browser_search` não é compatível com Structured Outputs na mesma chamada, existem dois modos:
-
-### Modo normal
-
-```
-mensagens + memória
-→ GPT-OSS 120B com JSON Schema
-→ resposta + estado pedagógico
-```
-
-### Modo web
-
-```
-mensagens + memória
-→ GPT-OSS 120B + browser_search
-→ resposta textual com fontes
-→ persistir resposta e fontes em metadata
-→ se o turno alterar domínio, lacunas ou plano: fazer uma segunda chamada curta ao GPT-OSS 120B com Structured Outputs apenas para atualizar o estado pedagógico
-→ se não alterar o estado pedagógico: nenhuma segunda chamada
-```
-
-Busca web nunca é obrigatória para perguntas conceituais estáveis.
-
-## 11. API
-
-Substituir a API atual orientada por "planos visuais" por endpoints centrados em conversação.
-
-### `GET /api/conversations`
-
-Lista conversas do aluno autenticado.
-
-### `POST /api/conversations`
-
-Cria uma conversa.
-
-### `GET /api/conversations/:id`
-
-Retorna metadados da conversa e mensagens paginadas.
-
-### `POST /api/chat`
-
-Entrada:
+Exemplo:
 
 ```json
 {
-  "conversationId": "uuid",
-  "message": "Eu ainda não entendi fibra C"
+  "type": "diagram",
+  "variant": "neural_path",
+  "title": "Da pele ao córtex",
+  "nodes": [
+    {"id":"skin","label":"Receptor cutâneo","kind":"receptor"},
+    {"id":"cord","label":"Medula","kind":"spinal_cord"},
+    {"id":"thalamus","label":"Tálamo","kind":"brain"},
+    {"id":"cortex","label":"Córtex","kind":"cortex"}
+  ],
+  "edges": [
+    {"from":"skin","to":"cord","label":"aferência"},
+    {"from":"cord","to":"thalamus","label":"via ascendente"},
+    {"from":"thalamus","to":"cortex","label":"projeção"}
+  ]
 }
 ```
 
-Responsabilidades:
+O React gera o SVG.
 
-1. autenticar sessão;
-2. confirmar que a conversa pertence ao aluno;
-3. persistir mensagem;
-4. carregar memória/histórico necessário;
-5. decidir se busca web é necessária;
-6. chamar Groq diretamente;
-7. validar saída;
-8. persistir resposta;
-9. atualizar memória pedagógica;
-10. retornar a resposta.
+Isso permite:
 
-### `DELETE /api/conversations/:id`
+- setas;
+- destaques;
+- rótulos;
+- cores semânticas;
+- legendas;
+- sequência animada;
+- caminhos neurais;
+- mapas conceituais;
+- fluxos;
+- circuitos;
+- comparação visual.
 
-Faz **soft delete**: muda a conversa para `status='archived'`. As mensagens permanecem no banco para integridade do histórico e não aparecem na lista normal. Exclusão física não faz parte desta reconstrução.
+### 8.1 Biblioteca biomédica
 
-## 12. Prompt permanente do Tutor
+O novo frontend terá componentes vetoriais reutilizáveis:
 
-O prompt de sistema deve ser versionado no repositório e tratado como parte central do produto.
+- receptor/pele;
+- fibra mielinizada e não mielinizada;
+- nervo periférico;
+- medula/corno dorsal;
+- tálamo;
+- córtex;
+- circuito de portão;
+- controle descendente.
 
-Princípios obrigatórios:
+A IA seleciona e combina peças; não recebe autoridade para executar desenho arbitrário.
 
-- ensinar antes de avaliar;
-- descobrir o que o aluno já sabe;
-- evitar despejar conteúdo longo sem interação;
-- fazer uma pergunta por vez quando estiver avaliando;
-- adaptar linguagem ao aluno;
-- pedir raciocínio, não apenas memorização;
-- detectar e corrigir concepções erradas;
-- não fingir que o aluno entendeu;
-- não repetir conteúdo já dominado sem motivo;
-- usar exemplos e analogias;
-- conectar conteúdos novos a conteúdos já dominados;
-- registrar objetivos, domínio e dificuldades;
-- diferenciar educação de orientação médica pessoal;
-- quando houver incerteza factual atual, usar busca web em vez de inventar.
+## 9. Botões e fluxos gerados
 
-## 13. Primeiro acesso
+Botões não terão comportamento codificado pelo texto da IA.
 
-No primeiro acesso, o Tutor não deve abrir com uma aula fixa.
+Cada interação produz valor estruturado.
+
+Exemplo:
+
+```json
+{
+  "type": "choice",
+  "id": "fiber-speed",
+  "question": "Qual fibra conduz mais lentamente?",
+  "options": [
+    {"label":"Aβ","value":"abeta"},
+    {"label":"Aδ","value":"adelta"},
+    {"label":"C","value":"c"}
+  ]
+}
+```
+
+Ao clicar em C, o frontend envia um novo turno:
+
+```
+display: "C"
+value: "c"
+interactionId: "fiber-speed"
+```
+
+O modelo recebe isso junto do histórico e decide o próximo passo.
+
+Portanto:
+
+> **o fluxo é gerado pela decisão pedagógica da IA, não por árvores de if/else no frontend.**
+
+## 10. Quando usar conteúdo rico
+
+O Tutor deve escolher o formato pelo objetivo pedagógico.
+
+Regras de prompt:
+
+- explicação de mecanismo → preferir diagrama/steps;
+- comparação → preferir comparison/table;
+- revisão → flashcards/choice;
+- raciocínio clínico → case;
+- processo temporal → timeline;
+- teste de compreensão → choice/short_answer;
+- informação atual → texto + sources;
+- pergunta simples de esclarecimento → texto pode bastar.
+
+Durante uma sequência de ensino, o Tutor não deve produzir longas paredes de texto quando um bloco visual ou interativo tornar a ideia mais clara.
+
+## 11. AI Elements
+
+AI Elements será usado apenas onde resolve infraestrutura real do chat:
+
+- `Conversation`;
+- `MessageResponse` para Markdown;
+- `PromptInput`;
+- `Loader`;
+- `Sources`;
+- `Suggestion`;
+- ações básicas de mensagem quando úteis.
+
+Não instalar a biblioteca inteira.
+
+Os blocos pedagógicos do BIOMED são componentes próprios, porque comparação fisiológica, circuito neural e exercícios educacionais não devem parecer tool calls de um agente de programação.
+
+## 12. Modelo e geração
+
+Modelo fixo:
+
+```
+openai/gpt-oss-120b
+```
+
+Provider:
+
+```
+@ai-sdk/groq
+```
+
+O modelo não pode trocar silenciosamente.
+
+### 12.1 Turno normal
+
+Usar Structured Outputs com schema estrito para gerar:
+
+- mensagem;
+- blocos;
+- interação;
+- atualização pedagógica;
+- título sugerido da conversa.
+
+### 12.2 Turno com pesquisa web
+
+A Groq não permite `browser_search` junto de Structured Outputs.
 
 Fluxo:
 
 ```
-Tutor apresenta seu papel
-→ pergunta objetivo do aluno / contexto de estudo
-→ faz diagnóstico curto
-→ cria plano inicial
-→ começa o primeiro bloco de ensino
+contexto
+  ↓
+GPT-OSS 120B + browser_search
+  ↓
+resposta com fontes
+  ↓
+persistir resposta
+  ↓
+se o conteúdo mudar domínio/plano:
+    chamada curta estruturada para extrair atualização pedagógica
 ```
 
-O diagnóstico acontece conversando.
+A segunda chamada é feita apenas quando necessária.
 
-## 14. Retorno do aluno
+## 13. Currículo
 
-Quando o aluno volta:
+Não haverá aulas fixas.
 
-```
-carregar memória
-→ carregar conversa mais recente
-→ Tutor identifica onde parou
-→ retoma sem reiniciar o curso
-```
+O repositório terá um pequeno arquivo versionado de **objetivos curriculares**, não conteúdo didático pronto.
 
 Exemplo:
 
-> "Na última sessão você já diferenciou Aβ de C, mas ainda confundiu Aδ com C. Vamos continuar exatamente daí."
+```
+Sensibilidade somática
+├─ modalidades
+├─ receptores
+├─ transdução
+├─ fibras
+├─ vias
+├─ integração central
+├─ nocicepção e dor
+├─ modulação
+└─ aplicação
+```
 
-## 15. Progresso
+O Tutor monta caminhos individualizados.
 
-O progresso deixa de ser calculado por "aulas concluídas".
+Esse arquivo serve para:
 
-A IA mantém estado pedagógico por objetivos.
+- evitar lacunas graves;
+- orientar abrangência;
+- medir domínio;
+- impedir que a IA transforme o curso em assuntos aleatórios.
+
+Ele não contém aulas nem respostas.
+
+## 14. Prompt do professor
+
+Criar arquivo versionado, por exemplo:
+
+```
+src/lib/ai/tutor-instructions.ts
+```
+
+Ele define comportamento, não conteúdo estático.
+
+Princípios:
+
+- conversar como professor humano;
+- ensinar antes de cobrar;
+- uma pergunta por vez quando diagnosticando;
+- raciocínio antes de memorização;
+- descobrir a causa do erro;
+- adaptar profundidade;
+- reconhecer quando o aluno já domina;
+- não elogiar automaticamente resposta errada;
+- corrigir com clareza;
+- relacionar conceitos;
+- criar exemplos novos;
+- usar visual quando útil;
+- nunca fingir que pesquisou;
+- usar web para fatos atuais;
+- distinguir educação de orientação médica individual;
+- não diagnosticar nem prescrever para o aluno.
+
+## 15. Persistência
+
+### 15.1 `biomed_ai_conversations`
+
+- `id uuid`
+- `student_id uuid`
+- `title text`
+- `status active|archived`
+- `current_goal text`
+- `memory_summary text`
+- `study_state jsonb`
+- timestamps
+
+### 15.2 `biomed_ai_messages`
+
+- `id uuid`
+- `conversation_id uuid`
+- `student_id uuid`
+- `client_message_id uuid` para idempotência;
+- `role user|assistant`
+- `content text`
+- `ui jsonb`
+- `metadata jsonb`
+- `generation_status complete|failed`
+- timestamp
+
+### 15.3 `biomed_ai_memory`
+
+Uma linha por aluno:
+
+- resumo de longo prazo;
+- plano atual;
+- objetivos/domínio;
+- forças;
+- dificuldades;
+- concepções erradas recentes;
+- foco atual;
+- última recomendação;
+- timestamp.
+
+### 15.4 Índices
+
+Índices mínimos:
+
+- mensagens por `conversation_id, created_at`;
+- conversas por `student_id, last_message_at`;
+- idempotência por `conversation_id, client_message_id`.
+
+## 16. Segurança do Supabase
+
+O projeto atual compartilha tabelas BIOMED com outro sistema. A reconstrução toca somente objetos prefixados com `biomed_`.
+
+Os advisors atuais apontam funções BIOMED `SECURITY DEFINER` públicas. A reconstrução deve reduzir essa superfície.
+
+Direção:
+
+- navegador nunca chama tabelas de IA diretamente;
+- navegador chama apenas rotas Next.js;
+- token BIOMED continua sendo validado no servidor;
+- lógica privilegiada fica em funções mínimas;
+- funções auxiliares devem ir para schema não exposto quando possível;
+- `PUBLIC EXECUTE` deve ser explicitamente revogado em funções privilegiadas;
+- RLS permanece habilitado nas tabelas;
+- nenhum `student_id` vindo do cliente é confiável;
+- ownership sempre deriva da sessão;
+- rodar advisors após toda migration.
+
+Se a arquitetura atual de chave publishable exigir um RPC público específico, somente esse RPC recebe grant explícito e valida token internamente.
+
+## 17. Histórico e contexto
+
+Groq é stateless.
+
+Para cada turno, montar:
+
+1. system prompt;
+2. objetivos curriculares;
+3. memória pedagógica;
+4. resumo da conversa antiga;
+5. janela recente de mensagens;
+6. nova mensagem/interação.
+
+Não reenviar a conversa inteira indefinidamente.
+
+### 17.1 Compressão
+
+Quando a conversa ultrapassar limite de contexto interno da aplicação:
+
+- resumir partes antigas;
+- persistir resumo;
+- preservar fatos pedagógicos;
+- manter últimas mensagens completas.
+
+Resumo nunca substitui a memória pedagógica.
+
+## 18. Primeira experiência
+
+Primeiro acesso:
+
+```
+Tutor se apresenta
+→ pergunta objetivo/contexto
+→ diagnóstico curto conversacional
+→ identifica nível
+→ cria plano inicial
+→ inicia estudo
+```
+
+Nada de formulário pedagógico longo.
+
+## 19. Retorno
+
+Ao voltar:
+
+```
+carregar memória
+→ abrir conversa mais recente
+→ recuperar contexto
+→ mostrar mensagem anterior
+→ aluno continua
+```
+
+Se iniciar conversa nova, o Tutor ainda possui a memória pedagógica de longo prazo.
+
+## 20. Avaliações
+
+Avaliação é um **modo conversacional**, não uma página separada.
+
+Exemplo:
+
+> "Você já mostrou domínio de receptores e transdução. Vou fazer cinco perguntas sem pistas e depois revisar o que aparecer."
+
+A IA gera as perguntas.
+
+Durante uma avaliação:
+
+- não revelar resposta antes da tentativa;
+- registrar resultados no estado pedagógico;
+- mostrar resultado final visual;
+- gerar revisão dos erros.
+
+O frontend apenas renderiza os blocos e transmite respostas.
+
+## 21. Progresso
+
+Domínio é por objetivo curricular, não por "aula concluída".
 
 Exemplo:
 
@@ -390,270 +677,299 @@ Exemplo:
   "overall": 38,
   "currentFocus": "fibras",
   "objectives": {
-    "receptores": {"mastery": 90},
-    "transducao": {"mastery": 80},
-    "fibras": {"mastery": 55},
-    "vias": {"mastery": 20}
+    "receptores": {"mastery": 90, "confidence": 0.9},
+    "transducao": {"mastery": 80, "confidence": 0.8},
+    "fibras": {"mastery": 55, "confidence": 0.6},
+    "vias": {"mastery": 20, "confidence": 0.3}
   }
 }
 ```
 
-O percentual é indicativo, não uma trava rígida.
+O modelo propõe atualizações; o servidor:
 
-A interface pode exibir um resumo discreto, mas nunca competir com a conversa.
+- limita valores;
+- valida IDs curriculares;
+- rejeita chaves desconhecidas;
+- persiste somente estado validado.
 
-## 16. Avaliações
+## 22. API nova
 
-Provas e simulados deixam de ser um subsistema separado controlado por `assessment-engine.js`.
+Rotas Next.js:
 
-O Tutor pode iniciar uma avaliação dentro da conversa:
+```
+POST   /api/auth
+GET    /api/profile
 
-> "Você já domina bem esta parte. Vou fazer cinco questões sem dar pistas. No final eu corrijo tudo."
+GET    /api/conversations
+POST   /api/conversations
+GET    /api/conversations/[id]
+DELETE /api/conversations/[id]
 
-As perguntas são geradas pela IA e as respostas continuam dentro do histórico.
+POST   /api/chat
+POST   /api/chat/retry
+```
 
-Ao final, o Tutor registra:
+### `POST /api/chat`
 
-- tópicos avaliados;
-- desempenho;
-- erros;
-- nível de confiança;
-- assuntos que precisam de revisão;
-- próximo objetivo.
+Ordem obrigatória:
 
-A implementação pode manter registros estruturados de avaliações para relatório futuro, mas a experiência permanece conversacional.
+1. validar sessão;
+2. validar payload;
+3. validar ownership;
+4. deduplicar `clientMessageId`;
+5. persistir mensagem do aluno;
+6. montar contexto;
+7. escolher normal/web;
+8. chamar GPT-OSS 120B;
+9. validar resposta;
+10. persistir resposta;
+11. aplicar atualização pedagógica;
+12. atualizar conversation metadata;
+13. emitir telemetria;
+14. responder ao frontend.
 
-## 17. Interface
+## 23. Falhas
 
-A aplicação autenticada deve ter apenas três áreas principais:
+### IA indisponível
 
-### Barra lateral
+- mensagem do aluno permanece;
+- resposta não é falsificada localmente;
+- UI mostra retry;
+- nenhuma atualização de domínio acontece.
 
-- Nova conversa
-- histórico de conversas
-- progresso resumido
-- nome do aluno
-- sair
+### HTTP 429 / cota
 
-### Área principal
+- estado explícito de limite;
+- retry manual;
+- não trocar automaticamente para modelo pago.
 
-- mensagens;
-- respostas estruturadas quando necessário;
-- indicador de geração;
-- fontes quando houve busca web;
-- botão de retomar geração em falha recuperável.
+### JSON inválido
 
-### Compositor
+- uma tentativa controlada de reparo;
+- se falhar, resposta marcada como failed;
+- não persistir estado pedagógico inválido.
 
-- textarea expansível;
-- enviar;
-- Enter/Shift+Enter acessível;
-- estado de envio;
-- bloqueio contra envio duplicado.
+### Clique/enviar duplicado
 
-Não haverá dashboard obrigatório antes do Tutor.
+`client_message_id` impede duplicação.
 
-## 18. Entrega da resposta
+## 24. PostHog
 
-A primeira versão desta reconstrução usa **resposta completa, não streaming**, porque o estado pedagógico estruturado e sua persistência precisam ser validados como uma única unidade antes de serem aceitos.
+O PostHog atual ainda não recebeu evento do produto. A nova aplicação deve instrumentar desde o início.
 
-Enquanto a Groq responde, a interface mostra estado claro de geração ("Tutor está pensando...") sem bloquear a navegação do histórico.
-
-Streaming fica fora do escopo desta reconstrução e só poderá ser adicionado depois sem alterar o modelo de dados ou a API pública. Nenhuma resposta parcial é persistida como mensagem válida.
-
-## 19. Segurança
-
-- `GROQ_API_KEY` permanece apenas no servidor.
-- CPF nunca é enviado à Groq.
-- O Tutor recebe apenas ID interno e contexto pedagógico.
-- Cada conversa é isolada por `student_id`.
-- Toda leitura/escrita exige sessão válida.
-- RPCs não podem confiar em `student_id` enviado pelo navegador.
-- Funções `SECURITY DEFINER` devem derivar o aluno exclusivamente do token e ter privilégios explícitos mínimos.
-- Tabelas novas têm RLS habilitado.
-- Nenhum conteúdo gerado pela IA é executado como HTML ou JavaScript.
-- Markdown, se permitido, deve ser sanitizado.
-
-## 20. Migração
-
-A reconstrução deve evitar a falha anterior de "construir outra aplicação por cima".
-
-Estratégia:
-
-1. criar o novo subsistema conversacional em branch isolada;
-2. criar e testar persistência;
-3. construir nova API de chat;
-4. construir nova interface;
-5. validar fluxo completo;
-6. somente então trocar o entrypoint autenticado;
-7. remover código legado comprovadamente não usado.
-
-Arquivos candidatos a remoção após a troca:
-
-- `data/course-model.js`
-- `assessment-engine.js`
-- `learning-components.js`
-- `learning-components.css`
-- `visual-tutor.js`
-- `tutor-schema.js`
-- grande parte de `study-platform.js`
-- APIs antigas de estado/aula que se tornarem redundantes.
-
-Não apagar dados históricos durante a migração.
-
-## 21. Compatibilidade com dados existentes
-
-Preservar:
-
-- `biomed_students`;
-- `biomed_sessions`;
-- histórico de eventos;
-- notas/provas existentes enquanto ainda forem úteis;
-- autenticação atual.
-
-O estado legado pode ser usado como contexto inicial para alunos antigos, mas deixa de controlar a sequência futura.
-
-## 22. Falhas e recuperação
-
-### Groq indisponível
-
-Mostrar erro claro e permitir tentar novamente.
-
-Não inventar conteúdo local fingindo ser resposta da IA.
-
-### Limite de cota
-
-Mostrar indisponibilidade temporária de IA e preservar a mensagem ainda não respondida para nova tentativa.
-
-### Falha ao salvar mensagem
-
-Não gerar resposta se a mensagem do aluno não puder ser associada com segurança à conversa.
-
-### Resposta inválida
-
-No modo estruturado, rejeitar JSON inválido e fazer uma única tentativa de reparo controlado. Se continuar inválido, registrar falha e não atualizar domínio.
-
-### Histórico muito grande
-
-Usar resumo persistido + janela recente.
-
-## 23. Telemetria
-
-Eventos mínimos, sem CPF:
+Eventos de produto:
 
 - `conversation_created`
 - `conversation_opened`
 - `message_sent`
-- `assistant_response_completed`
-- `assistant_response_failed`
-- `web_search_used`
+- `rich_block_rendered`
+- `interaction_answered`
 - `learning_goal_changed`
 - `mastery_updated`
-- `assessment_started`
-- `assessment_completed`
+- `web_search_used`
+- `assistant_response_failed`
 
-Telemetria não é requisito para o chat funcionar.
+Usar AI Observability para chamadas LLM:
 
-## 24. Testes obrigatórios
+- generation;
+- modelo/provider;
+- latência;
+- tokens;
+- erros;
+- trace;
+- conversation/session ID interno.
 
-### Banco
+Não enviar CPF.
 
-- aluno A nunca lê conversa do aluno B;
-- sessão expirada falha;
-- mensagem persiste;
-- ordenação do histórico é estável;
-- memória é atualizada apenas para o aluno correto;
-- paginação funciona;
-- exclusão/arquivamento respeita propriedade.
+Conteúdo integral de prompts/respostas só deve ser enviado ao PostHog se a política de privacidade definida para o produto permitir; caso contrário usar modo de privacidade e manter somente metadados de observabilidade.
 
-### Backend
+## 25. Estrutura de código alvo
 
-- chamada normal usa `openai/gpt-oss-120b`;
-- modelo diferente é rejeitado;
-- histórico é enviado em ordem correta;
-- CPF nunca entra no prompt;
-- saída estruturada válida atualiza memória;
-- saída inválida não atualiza memória;
-- modo web habilita `browser_search`;
-- modo web não usa `response_format` incompatível;
-- timeout preserva conversa consistente.
+```
+app/
+  layout.tsx
+  page.tsx
+  chat/
+    [conversationId]/
+      page.tsx
+  api/
+    auth/route.ts
+    profile/route.ts
+    chat/route.ts
+    chat/retry/route.ts
+    conversations/route.ts
+    conversations/[id]/route.ts
 
-### Frontend
+components/
+  chat/
+    chat-shell.tsx
+    conversation-sidebar.tsx
+    tutor-message.tsx
+    composer.tsx
+  learning/
+    rich-turn.tsx
+    callout.tsx
+    bio-diagram.tsx
+    comparison.tsx
+    steps.tsx
+    timeline.tsx
+    table.tsx
+    flashcards.tsx
+    choice.tsx
+    case-card.tsx
+    sequence.tsx
+    progress-card.tsx
+    sources.tsx
 
-- conversa abre;
-- histórico carrega;
-- nova conversa funciona;
-- mensagens do aluno e Tutor aparecem na ordem correta;
-- envio duplicado é evitado;
-- mobile funciona;
-- teclado funciona;
-- erro permite retry;
-- recarregar página mantém a conversa.
+lib/
+  ai/
+    groq.ts
+    tutor-instructions.ts
+    tutor-schema.ts
+    curriculum.ts
+    context-builder.ts
+    web-mode.ts
+  auth/
+    session.ts
+  db/
+    supabase.ts
+    conversations.ts
+    memory.ts
+  analytics/
+    posthog-server.ts
+    posthog-client.ts
+
+public/
+  biomed/
+    diagrams/
+
+supabase/
+  migrations/
+
+tests/
+```
+
+Arquivos podem ser refinados no plano, mas não voltar a concentrar toda a aplicação em um arquivo gigante.
+
+## 26. Testes
+
+### Schema/UI
+
+- todo tipo de bloco válido renderiza;
+- tipo desconhecido é rejeitado;
+- HTML/JS arbitrário é rejeitado;
+- diagramas têm labels acessíveis;
+- opções clicadas viram mensagens;
+- markdown é sanitizado.
+
+### Persistência
+
+- histórico persiste após reload;
+- conversa nova preserva memória global;
+- aluno A não acessa aluno B;
+- soft-delete remove da lista;
+- idempotência impede mensagem duplicada.
+
+### Pedagogia
+
+Cenários simulados:
+
+- aluno responde corretamente;
+- aluno erra pelo mesmo motivo duas vezes;
+- aluno pede outra explicação;
+- aluno muda de assunto;
+- aluno pede prova;
+- aluno retorna depois;
+- Tutor não repete conteúdo dominado sem motivo.
+
+### Groq
+
+- modelo obrigatório é 120B;
+- structured output normal;
+- browser search só no modo web;
+- web mode não combina response_format incompatível;
+- timeout;
+- 429;
+- resposta inválida.
+
+### Browser
+
+- desktop;
+- mobile;
+- teclado;
+- drawer;
+- scroll;
+- composer;
+- rich blocks;
+- retry;
+- reload;
+- histórico.
 
 ### Produção
 
-- login real de conta sintética;
-- criar conversa;
-- enviar pergunta;
-- receber GPT-OSS 120B;
-- recarregar;
-- confirmar histórico;
-- abrir conversa antiga;
-- confirmar memória pedagógica;
-- testar uma pergunta que force web search.
+- conta sintética;
+- nova conversa;
+- conteúdo rico real;
+- diagrama real;
+- botão real;
+- correção real;
+- reload;
+- nova conversa com memória;
+- web search com fontes;
+- inspeção de logs;
+- PostHog recebendo eventos;
+- Vercel sem erro runtime.
 
-## 25. Critérios de aceite
+## 27. Critérios de aceite
 
-A reconstrução só é considerada concluída quando:
+A entrega só termina quando:
 
-1. após login, o Tutor é a interface principal;
-2. o aluno conversa livremente como em um chat moderno;
-3. existem múltiplas conversas persistentes;
-4. histórico sobrevive a recarregamento e novo dispositivo;
-5. Tutor lembra o estado pedagógico do aluno entre conversas;
-6. Tutor cria o plano de estudo;
-7. Tutor gera o conteúdo;
-8. Tutor cria perguntas e exercícios;
-9. Tutor corrige e adapta o próximo passo;
-10. sequência de estudo não depende de `course-model.js`;
-11. provas não dependem de perguntas locais fixas;
-12. GPT-OSS 120B é o único modelo principal;
-13. chamadas vão diretamente à Groq;
-14. busca web funciona quando necessária;
-15. chave permanece somente no servidor;
-16. CPF nunca é enviado ao modelo;
-17. conversas são isoladas por aluno;
-18. UI funciona em desktop e celular;
-19. testes passam;
-20. deploy Vercel fica READY;
-21. fluxo real em produção é validado;
-22. código legado substituído é removido, não mantido como segunda aplicação por baixo.
+1. Tutor é a aplicação autenticada principal;
+2. conversa é natural, persistente e multi-turn;
+3. histórico funciona em dispositivos diferentes;
+4. IA gera plano;
+5. IA gera conteúdo;
+6. IA gera explicações visuais;
+7. IA gera diagramas/desenhos;
+8. IA gera botões e exercícios;
+9. cliques alimentam o mesmo fluxo conversacional;
+10. IA corrige e adapta;
+11. memória pedagógica sobrevive a novas conversas;
+12. conteúdo não depende de aulas hardcoded;
+13. avaliações não dependem de perguntas hardcoded;
+14. GPT-OSS 120B é fixo;
+15. Groq é chamada diretamente;
+16. busca web funciona quando necessária;
+17. UI é bonita e responsiva;
+18. nenhuma resposta rica executa código arbitrário;
+19. isolamento de aluno é testado;
+20. PostHog mede produto e LLM;
+21. CI passa;
+22. preview Vercel passa;
+23. teste real de produção passa;
+24. arquivos substituídos são removidos;
+25. imports/referências mortas são zero;
+26. documentação contraditória é removida ou atualizada;
+27. não existe segunda aplicação escondida por baixo da nova.
 
-## 26. Fora de escopo
+## 28. Fora de escopo
 
 - diagnóstico médico pessoal;
 - prescrição;
-- acesso do Tutor a GitHub, Vercel, terminal ou Supabase administrativo;
-- geração ou execução livre de HTML/JavaScript pelo modelo;
-- múltiplos agentes;
+- GitHub/Vercel/Supabase administrativo acessível ao Tutor;
 - OpenCode;
 - Railway;
 - Vercel Sandbox;
-- troca automática para modelos pagos;
-- marketplace, gamificação ou ranking como prioridade desta reconstrução.
+- AI Gateway;
+- múltiplos agentes;
+- HTML/JS livre gerado pelo modelo;
+- fallback automático para modelo pago;
+- ranking/gamificação como prioridade.
 
-## 27. Decisão arquitetural
+## 29. Decisão final
 
-O BIOMED será reconstruído como um **aplicativo conversacional AI-first com memória persistente**.
+O BIOMED será uma aplicação **AI-first, conversacional e multimodal na apresentação**, com GPT-OSS 120B como cérebro pedagógico.
 
-A autoridade pedagógica deixa de estar no frontend e passa para o GPT-OSS 120B, enquanto o código local assume somente responsabilidades determinísticas:
+"Multimodal na apresentação" nesta fase significa que a IA produz texto, estrutura visual, diagramas SVG, comparações, cartões, botões, fluxos e exercícios através de dados estruturados renderizados pelo frontend. Não significa executar código arbitrário gerado pela IA.
 
-- autenticação;
-- persistência;
-- segurança;
-- montagem de contexto;
-- validação;
-- renderização;
-- recuperação de falhas.
-
-Essa decisão substitui a especificação anterior de "plataforma guiada por telas com Tutor visual como orquestrador".
+A reconstrução também substitui o frontend vanilla antigo por uma base Next.js/React coerente e remove os arquivos substituídos após validação, evitando novamente uma arquitetura feita de camadas abandonadas.
