@@ -1,6 +1,6 @@
 import {allowCors,json,readJson} from "./_lib/security.js";
 import {rpc,bearerToken} from "./_lib/biomed-rpc.js";
-import {callTutorAI,FREE_MODEL} from "./_lib/ai-gateway.js";
+import {callTutorAI,GROQ_MODEL} from "./_lib/groq.js";
 import {normalizeTutorPlan,fallbackTutorPlan,containsUnsafeTutorContent,TUTOR_BLOCK_TYPES} from "../tutor-schema.js";
 
 
@@ -109,20 +109,20 @@ export default async function handler(req,res){
     if(!messages.length)return json(res,400,{error:"Mensagem ausente"});
     const mode=String(body.mode||"chat").slice(0,40);
     const prompt=buildPrompt(systemPrompt(profile,mode),messages);
-    const apiKey=String(process.env.AI_GATEWAY_API_KEY||req.headers["x-vercel-oidc-token"]||process.env.VERCEL_OIDC_TOKEN||"").trim();
-    const model=String(process.env.BIOMED_AI_MODEL||FREE_MODEL).trim();
+    const apiKey=String(process.env.GROQ_API_KEY||"").trim();
+    const model=String(process.env.BIOMED_AI_MODEL||GROQ_MODEL).trim();
     if(!apiKey)return json(res,503,{error:"Tutor IA não está configurado.",code:"AI_NOT_CONFIGURED",browserFallback:"rules"});
     try{
       const requestStarted=Date.now();
-      const result=await callTutorAI({prompt,model,apiKey});
+      const result=await callTutorAI({prompt,model,apiKey,enableBrowserSearch:shouldUseBrowserSearch(messages,mode),reasoningEffort:mode==="visual"?"low":"medium"});
       const parsed=maybeParse(result.content,mode);
-      console.info("biomed_tutor_ok",JSON.stringify({mode,durationMs:result.durationMs||Date.now()-requestStarted,runtime:result.runtime||"vercel-ai-gateway"}));
+      console.info("biomed_tutor_ok",JSON.stringify({mode,durationMs:result.durationMs||Date.now()-requestStarted,runtime:result.runtime||"groq-direct"}));
       if(mode==="visual"){
         const valid=Boolean(parsed);
         const plan=valid?parsed:fallbackTutorPlan("A resposta da IA não passou pela validação visual. Continue por este bloco seguro.");
-        return json(res,200,{provider:valid?"ai-gateway":"fallback",runtime:valid?"vercel-ai-gateway":"local-safe-plan",model:valid?result.model:"BIOMED",durationMs:result.durationMs||0,code:valid?null:"AI_INVALID_JSON",content:"",parsed:plan,plan});
+        return json(res,200,{provider:valid?"groq":"fallback",runtime:valid?"groq-direct":"local-safe-plan",model:valid?result.model:"BIOMED",durationMs:result.durationMs||0,code:valid?null:"AI_INVALID_JSON",content:"",parsed:plan,plan});
       }
-      return json(res,200,{provider:"ai-gateway",runtime:result.runtime||"vercel-ai-gateway",model:result.model,durationMs:result.durationMs||0,content:result.content,parsed});
+      return json(res,200,{provider:"groq",runtime:result.runtime||"groq-direct",model:result.model,durationMs:result.durationMs||0,content:result.content,parsed});
     }catch(e){
       console.warn("biomed_tutor_fallback",JSON.stringify({mode,code:e?.code||"AI_RUNTIME_ERROR",durationMs:Number(e?.durationMs||0)}));
       if(mode==="visual"){

@@ -206,12 +206,12 @@ export async function mountVisualTutor(mount,{prompt="Conduza uma atividade visu
     if(serial!==requestSerial)return;
 
     const elapsed=Math.round(performance.now()-started);
-    renderPlan(canvas,result.provider==="ai-gateway"?result.plan:localPlan,handlers);
-    if(result.provider==="ai-gateway")history.push({role:"user",content:userPrompt},{role:"assistant",content:result.plan.screen.title+": "+result.plan.screen.objective});
+    renderPlan(canvas,result.provider==="groq"?result.plan:localPlan,handlers);
+    if(result.provider==="groq")history.push({role:"user",content:userPrompt},{role:"assistant",content:result.plan.screen.title+": "+result.plan.screen.objective});
     trackLearningEvent("tutor_action_rendered",{title:result.plan.screen.title,blocks:result.plan.blocks.length,provider:result.provider,durationMs:elapsed});
     learningAction("tutor_action",{title:result.plan.screen.title,blockTypes:result.plan.blocks.map(b=>b.type),provider:result.provider,durationMs:elapsed}).catch(()=>{});
 
-    if(result.provider==="ai-gateway"){
+    if(result.provider==="groq"){
       statusText.textContent="IA adaptou em "+(elapsed/1000).toFixed(1)+" s";
       appendHistory(historyLog,"assistant",result.plan.screen.title+" — "+result.plan.screen.objective);
     }else{
