@@ -1,17 +1,79 @@
 # BIOMED — contrato de arquitetura
-Objetivo: ensinar fisiologia sensorial, nocicepção e modulação da dor; o Tutor é um professor e não um programador.
+
+## Regra principal
+
+O BIOMED é uma aplicação educacional **AI-first**.
+
+Depois do login, o Tutor IA é a experiência principal. O frontend não contém um curso rígido concorrente com a IA. O GPT-OSS 120B decide a sequência pedagógica usando currículo amplo, memória do aluno e conversa.
+
+A especificação vigente é:
+
+`docs/superpowers/specs/2026-09-30-biomed-ai-first-conversational-tutor-design.md`
+
+Ela substitui as decisões arquiteturais anteriores quando houver conflito.
+
 ## Arquitetura permanente
-1. Aplicativo único: `study-platform.js`. Autenticação única: `auth.js` → `/api/auth`.
-2. Nenhuma interface anterior montada por baixo; não criar novos painéis, trilhas ou bancos locais.
-3. Tutor: `api/tutor.js` → `api/_lib/ai-gateway.js` → Vercel AI Gateway, sem Sandbox, Railway, OpenCode CLI ou sessão externa.
-4. Usar somente IDs de modelos confirmados gratuitos e explicitamente permitidos em `FREE_ALLOWLIST`; se o provedor encerrar a oferta, bloquear a chamada, nunca migrar para modelo pago automaticamente.
-5. Autenticar no servidor via `VERCEL_OIDC_TOKEN` (padrão) ou `AI_GATEWAY_API_KEY`; nunca enviar credenciais ao navegador.
-6. Dados de CPF ou de identificação não podem ir para o modelo. Supabase é a única fonte de progresso e provas.
-7. `tutor-schema.js` verifica o formato visual; resposta inválida deve ser registrada como fallback, nunca como IA bem-sucedida.
-8. Mostrar atividade local útil enquanto a IA responde; manter atividade inicial quando a IA falhar.
-9. Alterar arquivos existentes, apagar código legado comprovadamente sem uso e atualizar testes/documentação a cada mudança.
-10. Para confirmar IA real, exigir teste autenticado em produção e leitura de logs. Testes simulados não comprovam disponibilidade do serviço.
-## Núcleo
-`index.html`, `auth.js`, `study-platform.js`, `visual-tutor.js`, `tutor-schema.js`, `api/tutor.js`, `api/_lib/ai-gateway.js`, APIs de estudo e Supabase.
-## Observação de compatibilidade
-OpenCode Zen `-free` retornou HTTP 403 em produção (30/09/2026); não reintroduzir sem um teste efetivo de permissão.
+
+1. Frontend alvo: Next.js App Router + React + TypeScript.
+2. Chat persistente como interface principal.
+3. GPT-OSS 120B via Groq direta; sem AI Gateway, OpenCode, Railway ou Sandbox.
+4. O Tutor gera narrativa, conteúdo rico, diagramas, comparações, botões, exercícios e fluxo pedagógico por dados estruturados.
+5. O modelo nunca gera/executa HTML, JSX, CSS ou JavaScript arbitrário.
+6. Blocos ricos são renderizados por componentes React allow-listed e validados.
+7. Conversas, mensagens e memória pedagógica persistem no Supabase.
+8. CPF nunca é enviado à IA.
+9. O navegador não recebe segredos da Groq nem privilégios administrativos do Supabase.
+10. PostHog mede produto e chamadas LLM sem CPF.
+11. O modelo principal é fixo: `openai/gpt-oss-120b`.
+12. Busca web é usada somente quando necessária e respeita a incompatibilidade da Groq entre `browser_search` e Structured Outputs.
+
+## Regra de limpeza
+
+A reconstrução não pode criar uma segunda aplicação por cima da anterior.
+
+Quando a substituição estiver funcional e verificada:
+
+- apagar código, testes e documentação que ficaram sem consumidor;
+- mover somente assets realmente usados;
+- remover imports e rotas mortas;
+- não manter arquivos “por garantia”;
+- não deixar TODO, placeholder ou componente sem ação;
+- não manter fallback local fingindo ser resposta da IA.
+
+Arquivos antigos citados como candidatos a remoção estão listados na especificação.
+
+## Segurança do banco
+
+O Supabase atual também contém tabelas de outro sistema. Alterações e limpezas desta reconstrução devem atingir exclusivamente objetos BIOMED.
+
+Toda operação privilegiada deve:
+
+- derivar o aluno da sessão;
+- ignorar `student_id` fornecido pelo navegador;
+- limitar `SECURITY DEFINER`;
+- revogar `PUBLIC EXECUTE` quando aplicável;
+- manter RLS;
+- rodar advisors depois de migrations.
+
+## Verificação obrigatória
+
+Nenhuma etapa é concluída apenas porque o código foi escrito.
+
+Exigir:
+
+- testes;
+- build;
+- preview Vercel;
+- fluxo real no navegador;
+- chamada real à Groq;
+- persistência real no Supabase;
+- PostHog recebendo eventos;
+- varredura de código legado sem uso antes do merge final.
+
+## Produto
+
+O Tutor deve ensinar, não apenas responder.
+
+Cada turno pode escolher o melhor formato pedagógico: texto formatado, desenho/diagrama, processo, comparação, tabela, cartão, caso, pergunta, botões, sequência, revisão ou fontes.
+
+A autoridade pedagógica é da IA. O código local fica responsável por autenticação, segurança, persistência, validação e renderização.
