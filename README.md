@@ -1,23 +1,30 @@
 # BIOMED — estudo guiado
 Percurso único do aluno: Perceber → Conduzir → Processar → Modular → Aplicar.
+
 ## Aplicação
 `index.html` prepara uma única tela de acesso ou restauração de sessão. `auth.js` autentica e `study-platform.js` constrói um único aplicativo com trilha, Tutor, treino, provas, progresso, ranking e biblioteca.
+
 ## Tutor IA
 ```
 Aluno → /api/tutor na Vercel → Supabase (contexto anônimo do aluno)
-      → Vercel AI Gateway → Ling 3.1 Flash (ID gratuito)
+      → API direta da Groq → openai/gpt-oss-120b
       → tutor-schema.js → atividade visual
 ```
-Nenhum OpenCode CLI, Sandbox, Railway ou processos secundários. `visual-tutor.js` mostra atividade imediata e a substitui somente após receber resposta válida da IA.
-A função usa o token OIDC automático da Vercel; `AI_GATEWAY_API_KEY` é opcional. Modelo permitido: `inclusionai/ling-3.1-flash-free`; ID terminado em `-free` impede migração silenciosa para plano pago.
-**Gratuidade depende do provedor:** o modelo pode deixar de existir. O app não deve gastar créditos ou usar outro modelo sem revisão expressa.
 
-### Estado operacional verificado em 30/09/2026
-- Vercel AI Gateway: autenticação OIDC presente, mas a chamada real foi recusada com `customer_verification_required` até a conta concluir a verificação exigida pelo Gateway.
-- OpenCode Zen / Console Inference: chaves válidas chegam ao serviço, porém modelos gratuitos recusam uso externo ao cliente OpenCode; não usar Railway ou Sandbox como tentativa de contornar essa restrição.
-- Vercel Connect `opencode/bistre-ridge`: conector `api-key` existente, porém configurado somente para sujeito `user`; não é uma rota app-scoped para o Tutor central.
-- Enquanto nenhum provedor externo concluir uma chamada real, o frontend deve identificar corretamente o plano local como fallback e nunca apresentá-lo como resposta da IA.
+Não há OpenCode CLI, Vercel Sandbox, Railway, Ollama ou Vercel AI Gateway no caminho da IA. A função `/api/tutor` faz uma única chamada HTTPS à Groq.
+
+O modelo fica travado em `openai/gpt-oss-120b`; o código rejeita troca silenciosa para outro modelo. A credencial fica somente em `GROQ_API_KEY` na Vercel e nunca deve ser salva no Git.
+
+### Internet sem outro agente intermediário
+O GPT-OSS 120B da Groq suporta `browser_search` executado nos próprios servidores da Groq. O BIOMED só habilita essa ferramenta quando a pergunta pede informação atual, pesquisa na web, fontes ou conteúdo recente. Perguntas normais de fisiologia não acionam busca, evitando latência desnecessária.
+
+A arquitetura continua com fallback local imediato no frontend: se a IA externa falhar ou ultrapassar o limite, o aluno não fica preso na tela.
+
+### Gratuidade
+A integração foi desenhada para a cota gratuita da conta Groq. O aplicativo não troca automaticamente para outro modelo ou provedor. Limites e disponibilidade do plano gratuito são definidos pela Groq e podem mudar; o código mantém o modelo fixo para impedir migração silenciosa.
+
 ## Dados
-Supabase persiste aulas, provas e eventos; CPF nunca é fornecido ao modelo. O banco ainda precisa de isolamento próprio, sem migração destrutiva de produção.
+Supabase persiste aulas, provas e eventos; CPF nunca é fornecido ao modelo. O contexto enviado à IA é pedagógico e anonimizado.
+
 ## Verificação
-`npm test`, implantação de prévia, e uma solicitação real de aluno autenticado. Saúde `/api/health` mostra configuração mas não substitui o teste real.
+Execute `npm test`, publique a prévia e faça uma solicitação real de aluno autenticado. `/api/health` mostra se `GROQ_API_KEY` está configurada, mas o teste real de `/api/tutor` é a validação final.
