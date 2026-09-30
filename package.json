@@ -11,4 +11,4 @@
     "test": "node --check server.js && node --check auth.js && node --check study-platform.js && node --check visual-tutor.js && node --check learning-components.js && node --check api/tutor.js && node --check api/_lib/groq.js && node --test tests/*.test.mjs"
   },
   "dependencies": {}
-}\n
+}
