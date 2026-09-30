@@ -36,6 +36,9 @@ create table if not exists public.biomed_ai_messages (
 create index if not exists biomed_ai_messages_conversation_created_idx
   on public.biomed_ai_messages(conversation_id, created_at asc);
 
+create index if not exists biomed_ai_messages_student_idx
+  on public.biomed_ai_messages(student_id);
+
 create table if not exists public.biomed_ai_memory (
   student_id uuid primary key references public.biomed_students(id) on delete cascade,
   long_term_summary text not null default '',

@@ -138,6 +138,11 @@ export const learningUpdateSchema=z.object({
   currentGoal:z.string().trim().max(400),
   nextGoal:z.string().trim().max(400),
   progress:z.number().min(0).max(100),
+  objectives:z.array(z.object({
+    id,
+    mastery:z.number().min(0).max(100),
+    confidence:z.number().min(0).max(1)
+  }).strict()).max(10),
   mastered:z.array(id).max(24),
   struggling:z.array(id).max(24),
   misconceptions:z.array(z.string().trim().max(500)).max(12)

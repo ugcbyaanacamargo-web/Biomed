@@ -17,7 +17,7 @@ describe("richTutorTurnSchema",()=>{
       ],
       learning:{
         mode:"teach",currentGoal:"comparar fibras",nextGoal:"relacionar mielina e velocidade",
-        progress:35,mastered:["receptores"],struggling:["fibras"],misconceptions:[]
+        progress:35,objectives:[{id:"fibras",mastery:55,confidence:.6}],mastered:["receptores"],struggling:["fibras"],misconceptions:[]
       },
       conversation:{suggestedTitle:"Fibras sensoriais",memorySummary:"Estudando fibras.",shouldSummarize:false}
     });
@@ -27,7 +27,7 @@ describe("richTutorTurnSchema",()=>{
   it("rejects arbitrary HTML/script blocks",()=>{
     expect(()=>richTutorTurnSchema.parse({
       schemaVersion:1,message:"x",blocks:[{type:"html",content:"<script>alert(1)</script>"}],
-      learning:{mode:"teach",currentGoal:"x",nextGoal:"x",progress:0,mastered:[],struggling:[],misconceptions:[]},
+      learning:{mode:"teach",currentGoal:"x",nextGoal:"x",progress:0,objectives:[],mastered:[],struggling:[],misconceptions:[]},
       conversation:{suggestedTitle:"x",memorySummary:"",shouldSummarize:false}
     })).toThrow();
   });
