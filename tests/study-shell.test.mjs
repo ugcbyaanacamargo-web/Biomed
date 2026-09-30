@@ -9,8 +9,9 @@ test("authenticated shell has explicit separate sections",()=>{
   for(const t of ["Minha trilha","Tutor IA","Praticar","Provas e simulados","Meu progresso","Ranking","Biblioteca / Revisão"]) assert.ok(js.includes(t),t);
 });
 
-test("legacy long layout is hidden when guided app is active",()=>{
-  assert.ok(css.includes("guided-study-active .layout"));
+test("study UI has no legacy layout hiding rules",()=>{
+  assert.ok(!css.includes("guided-study-active .layout"));
+  assert.ok(!css.includes("guided-study-active .topbar"));
   assert.ok(js.includes("Continuar estudando"));
 });
 
