@@ -1,14 +1,35 @@
 {
   "name": "biomed",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "private": true,
-  "type": "module",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.22.2"
   },
   "scripts": {
-    "start": "node server.js",
-    "test": "node --check server.js && node --check auth.js && node --check study-platform.js && node --check visual-tutor.js && node --check learning-components.js && node --check api/tutor.js && node --check api/_lib/groq.js && node --test tests/*.test.mjs"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "verify": "npm run test && npm run typecheck && npm run build"
   },
-  "dependencies": {}
+  "dependencies": {
+    "lucide-react": "1.48.0",
+    "next": "16.3.7",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "zod": "4.6.5",
+    "streamdown": "2.6.0",
+    "use-stick-to-bottom": "1.1.6"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "26.6.3",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "tailwindcss": "4.3.3",
+    "typescript": "6.0.3",
+    "vitest": "5.0.2",
+    "vite": "8.3.0"
+  }
 }

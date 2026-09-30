@@ -1,30 +1,75 @@
-# BIOMED — estudo guiado
-Percurso único do aluno: Perceber → Conduzir → Processar → Modular → Aplicar.
+# BIOMED
 
-## Aplicação
-`index.html` prepara uma única tela de acesso ou restauração de sessão. `auth.js` autentica e `study-platform.js` constrói um único aplicativo com trilha, Tutor, treino, provas, progresso, ranking e biblioteca.
+BIOMED é um tutor conversacional de fisiologia sensorial. O produto autenticado é uma única aplicação **AI-first**: o aluno conversa com o Tutor, e o GPT-OSS 120B cria o caminho de estudo, explicações, diagramas, exercícios e revisões de acordo com o histórico e o domínio demonstrado.
 
-## Tutor IA
+## Arquitetura
+
 ```
-Aluno → /api/tutor na Vercel → Supabase (contexto anônimo do aluno)
-      → API direta da Groq → openai/gpt-oss-120b
-      → tutor-schema.js → atividade visual
+Aluno
+  → Next.js / React
+  → rotas /api/*
+  → sessão BIOMED + Supabase
+  → Groq API direta
+  → openai/gpt-oss-120b
+  → Rich Learning UI
+  → histórico + memória pedagógica no Supabase
 ```
 
-Não há OpenCode CLI, Vercel Sandbox, Railway, Ollama ou Vercel AI Gateway no caminho da IA. A função `/api/tutor` faz uma única chamada HTTPS à Groq.
+Não há OpenCode, Railway, Vercel Sandbox, Vercel AI Gateway ou segundo motor de curso.
 
-O modelo fica travado em `openai/gpt-oss-120b`; o código rejeita troca silenciosa para outro modelo. A credencial fica somente em `GROQ_API_KEY` na Vercel e nunca deve ser salva no Git.
+## Rich Learning UI
 
-### Internet sem outro agente intermediário
-O GPT-OSS 120B da Groq suporta `browser_search` executado nos próprios servidores da Groq. O BIOMED só habilita essa ferramenta quando a pergunta pede informação atual, pesquisa na web, fontes ou conteúdo recente. Perguntas normais de fisiologia não acionam busca, evitando latência desnecessária.
+A IA nunca executa HTML ou JavaScript. Ela retorna dados estruturados validados por Zod. O frontend renderiza componentes seguros para:
 
-A arquitetura continua com fallback local imediato no frontend: se a IA externa falhar ou ultrapassar o limite, o aluno não fica preso na tela.
+- Markdown;
+- conceitos e destaques;
+- diagramas SVG semânticos;
+- comparações;
+- processos e timelines;
+- tabelas;
+- flashcards;
+- múltipla escolha;
+- verdadeiro/falso;
+- resposta curta;
+- casos;
+- ordenação;
+- progresso;
+- fontes;
+- sugestões de continuação.
 
-### Gratuidade
-A integração foi desenhada para a cota gratuita da conta Groq. O aplicativo não troca automaticamente para outro modelo ou provedor. Limites e disponibilidade do plano gratuito são definidos pela Groq e podem mudar; o código mantém o modelo fixo para impedir migração silenciosa.
+## Persistência
 
-## Dados
-Supabase persiste aulas, provas e eventos; CPF nunca é fornecido ao modelo. O contexto enviado à IA é pedagógico e anonimizado.
+Supabase armazena:
 
-## Verificação
-Execute `npm test`, publique a prévia e faça uma solicitação real de aluno autenticado. `/api/health` mostra se `GROQ_API_KEY` está configurada, mas o teste real de `/api/tutor` é a validação final.
+- `biomed_ai_conversations`;
+- `biomed_ai_messages`;
+- `biomed_ai_memory`.
+
+O CPF não é enviado ao modelo. O navegador não recebe a chave da Groq nem acesso administrativo ao Supabase.
+
+## IA
+
+Modelo fixo:
+
+```
+openai/gpt-oss-120b
+```
+
+Chamadas normais usam Structured Outputs. Perguntas que exigem informação atual usam `browser_search`; como a Groq não combina browser search e Structured Outputs na mesma chamada, o estado pedagógico é extraído por uma segunda chamada curta somente nesses turnos.
+
+## Desenvolvimento
+
+```bash
+npm ci --legacy-peer-deps
+npm run test
+npm run typecheck
+npm run build
+```
+
+Variáveis necessárias estão em `.env.example`.
+
+## Contratos
+
+- Arquitetura: `AGENTS.md`
+- Especificação: `docs/superpowers/specs/2026-09-30-biomed-ai-first-conversational-tutor-design.md`
+- Plano: `docs/superpowers/plans/2026-09-30-biomed-ai-first-rebuild.md`

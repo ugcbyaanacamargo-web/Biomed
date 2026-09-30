@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 420" role="img" aria-labelledby="t"><title id="t">Comparação das fibras A beta, A delta e C</title>
-<rect width="920" height="420" rx="34" fill="#f7fbfe"/>
-<g font-family="Arial"><text x="54" y="62" font-size="28" font-weight="700" fill="#14395a">Compare a “estrada” de cada fibra</text>
-<text x="55" y="122" font-size="34" font-weight="800" fill="#1778c3">Aβ</text><path d="M132 112H810" stroke="#1778c3" stroke-width="28" stroke-linecap="round"/><path d="M786 90l42 22-42 22" fill="#1778c3"/><text x="140" y="157" font-size="18" fill="#52677b">grande diâmetro • mielinizada • condução rápida • toque/pressão</text>
-<text x="55" y="232" font-size="34" font-weight="800" fill="#d84b57">Aδ</text><path d="M132 222H735" stroke="#d84b57" stroke-width="16" stroke-linecap="round"/><path d="M712 204l36 18-36 18" fill="#d84b57"/><text x="140" y="263" font-size="18" fill="#52677b">diâmetro menor • fina mielina • dor rápida/aguda</text>
-<text x="55" y="342" font-size="34" font-weight="800" fill="#7a55bd">C</text><path d="M132 332H610" stroke="#7a55bd" stroke-width="9" stroke-linecap="round" stroke-dasharray="12 10"/><path d="M590 317l30 15-30 15" fill="#7a55bd"/><text x="140" y="374" font-size="18" fill="#52677b">pequeno diâmetro • sem mielina • dor lenta/difusa</text></g></svg>
