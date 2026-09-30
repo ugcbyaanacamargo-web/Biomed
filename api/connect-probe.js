@@ -4,7 +4,7 @@ export default async function handler(req,res){
   if(process.env.VERCEL_ENV!=="preview"||req.method!=="GET"||req.query?.check!=="bistre-ridge")return respond(res,404,{error:"Not found"});
   let token;
   try{
-    token=await getToken("opencode/bistre-ridge",{subject:{type:"app"}});
+    token=await getToken("opencode/bistre-ridge");
   }catch(e){
     return respond(res,200,{connect:"rejected",errorType:String(e?.name||"Error").slice(0,100),code:String(e?.code||"").slice(0,100)});
   }
