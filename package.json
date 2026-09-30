@@ -1,14 +1,14 @@
 {
   "name": "biomed",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "private": true,
   "type": "module",
-  "engines": {"node": ">=22"},
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "start": "node server.js",
-    "test": "node --check server.js && node --check auth.js && node --check study-platform.js && node --check visual-tutor.js && node --check learning-components.js && node --check api/tutor.js && node --check api/_lib/opencode-local.js && node --test tests/*.test.mjs"
+    "test": "node --check server.js && node --check auth.js && node --check study-platform.js && node --check visual-tutor.js && node --check learning-components.js && node --check api/tutor.js && node --check api/_lib/ai-gateway.js && node --test tests/*.test.mjs"
   },
-  "dependencies": {
-    "opencode-ai": "1.18.33"
-  }
+  "dependencies": {}
 }

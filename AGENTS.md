@@ -1,42 +1,17 @@
-# BIOMED — Contrato de arquitetura para agentes
-
-Leia antes de qualquer refatoração.
-
-## Objetivo
-
-O BIOMED é uma plataforma educacional. O Tutor IA deve ajudar o aluno a entender, praticar, recuperar da memória e corrigir lacunas em fisiologia sensorial e dor.
-
-O Tutor NÃO é um agente de programação.
-
-## Regras permanentes
-
-1. Existe um único aplicativo do aluno: `study-platform.js`.
-2. Existe um único fluxo de autenticação: `auth.js` → `/api/auth`.
-3. Não criar segundo painel, segunda trilha, segundo ranking ou banco local paralelo.
-4. Modelos OpenCode `-free` devem ser usados **dentro do OpenCode**. O runtime correto é um `opencode serve` persistente no Railway, iniciado uma vez por container.
-5. É proibido voltar ao Vercel Sandbox por pergunta ou iniciar OpenCode por requisição.
-6. Vercel encaminha o Tutor ao Railway; APIs leves podem continuar na Vercel.
-7. O agente `biomed-tutor` não pode usar ferramentas, editar arquivos ou executar terminal.
-8. `visual-tutor.js` pode mostrar um plano local instantâneo enquanto a IA responde. Isso é fallback visual, não uma segunda fonte de progresso.
-9. O progresso persistente pertence ao Supabase. Não criar perfil acadêmico paralelo em `localStorage`.
-10. CPF, tokens, chaves e dados pessoais não podem ser enviados ao modelo.
-11. Respostas visuais passam por `tutor-schema.js`.
-12. Antes de adicionar arquivo novo, verificar se a função já existe; adaptar/remover é preferível a duplicar.
-13. Toda mudança estrutural atualiza testes e `docs/architecture.md`.
-14. O destino correto do banco é um projeto Supabase dedicado ao BIOMED.
-
+# BIOMED — contrato de arquitetura
+Objetivo: ensinar fisiologia sensorial, nocicepção e modulação da dor; o Tutor é um professor e não um programador.
+## Arquitetura permanente
+1. Aplicativo único: `study-platform.js`. Autenticação única: `auth.js` → `/api/auth`.
+2. Nenhuma interface anterior montada por baixo; não criar novos painéis, trilhas ou bancos locais.
+3. Tutor: `api/tutor.js` → `api/_lib/ai-gateway.js` → Vercel AI Gateway, sem Sandbox, Railway, OpenCode CLI ou sessão externa.
+4. Usar somente IDs de modelos confirmados gratuitos e explicitamente permitidos em `FREE_ALLOWLIST`; se o provedor encerrar a oferta, bloquear a chamada, nunca migrar para modelo pago automaticamente.
+5. Autenticar no servidor via `VERCEL_OIDC_TOKEN` (padrão) ou `AI_GATEWAY_API_KEY`; nunca enviar credenciais ao navegador.
+6. Dados de CPF ou de identificação não podem ir para o modelo. Supabase é a única fonte de progresso e provas.
+7. `tutor-schema.js` verifica o formato visual; resposta inválida deve ser registrada como fallback, nunca como IA bem-sucedida.
+8. Mostrar atividade local útil enquanto a IA responde; manter atividade inicial quando a IA falhar.
+9. Alterar arquivos existentes, apagar código legado comprovadamente sem uso e atualizar testes/documentação a cada mudança.
+10. Para confirmar IA real, exigir teste autenticado em produção e leitura de logs. Testes simulados não comprovam disponibilidade do serviço.
 ## Núcleo
-
-- `auth.js`
-- `study-platform.js`
-- `data/course-model.js`
-- `learning-components.js`
-- `assessment-engine.js`
-- `visual-tutor.js`
-- `tutor-schema.js`
-- `api/tutor.js`
-- `api/_lib/opencode-local.js`
-- APIs de progresso/autenticação
-- schema/migrations BIOMED
-
-Não reintroduzir portal legado, WebLLM automático, Vercel Sandbox, banco local paralelo ou chamadas diretas ao Zen para modelos `-free`.
+`index.html`, `auth.js`, `study-platform.js`, `visual-tutor.js`, `tutor-schema.js`, `api/tutor.js`, `api/_lib/ai-gateway.js`, APIs de estudo e Supabase.
+## Observação de compatibilidade
+OpenCode Zen `-free` retornou HTTP 403 em produção (30/09/2026); não reintroduzir sem um teste efetivo de permissão.
