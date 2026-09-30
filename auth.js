@@ -18,6 +18,7 @@ function validCPF(input){
 }
 function readSession(){try{return JSON.parse(localStorage.getItem(SESSION_KEY)||"null")}catch{return null}}
 function showGate(message=""){
+  document.documentElement.classList.remove("biomed-restoring-session","biomed-ready");
   document.body.classList.remove("student-authenticated","guided-study-active");
   gate?.classList.remove("hidden");
   if(message)errorBox.textContent=message;
