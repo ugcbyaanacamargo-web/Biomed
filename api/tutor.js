@@ -109,7 +109,7 @@ export default async function handler(req,res){
     if(!messages.length)return json(res,400,{error:"Mensagem ausente"});
     const mode=String(body.mode||"chat").slice(0,40);
     const prompt=buildPrompt(systemPrompt(profile,mode),messages);
-    const apiKey=String(process.env.AI_GATEWAY_API_KEY||process.env.VERCEL_OIDC_TOKEN||"").trim();
+    const apiKey=String(process.env.AI_GATEWAY_API_KEY||req.headers["x-vercel-oidc-token"]||process.env.VERCEL_OIDC_TOKEN||"").trim();
     const model=String(process.env.BIOMED_AI_MODEL||FREE_MODEL).trim();
     if(!apiKey)return json(res,503,{error:"Tutor IA não está configurado.",code:"AI_NOT_CONFIGURED",browserFallback:"rules"});
     try{

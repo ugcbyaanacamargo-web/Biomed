@@ -12,6 +12,7 @@ test("single student app and no legacy overlapping portal",()=>{
 test("Tutor runs on Vercel gateway without OpenCode, Sandbox or Railway",async()=>{
   assert.match(tutor,/callTutorAI/);assert.match(gateway,/ai-gateway\.vercel\.sh\/v1\/chat\/completions/);
   assert.match(tutor,/VERCEL_OIDC_TOKEN/);
+  assert.match(tutor,/x-vercel-oidc-token/);
   for(const old of ["runOpenCodeLocalTutor","TUTOR_RAILWAY_URL","proxyTutorToRailway","opencode serve"])assert.ok(!tutor.includes(old));
   assert.ok(!server.includes("warmOpenCodeLocal"));
   assert.ok(!("opencode-ai" in pkg.dependencies));

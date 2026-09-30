@@ -7,7 +7,7 @@ export default async function handler(req,res){
     ok:true,database:Boolean(BIOMED_DB.configured),databaseMode:"supabase-rpc",
     learningPlatform:"guided-v3",deploymentMarker:"vercel-free-gateway-v1",
     learningState:true,assessments:true,visualTutor:true,
-    tutorAIConfigured:Boolean(process.env.AI_GATEWAY_API_KEY||process.env.VERCEL_OIDC_TOKEN),
+    tutorAIConfigured:Boolean(process.env.AI_GATEWAY_API_KEY||req.headers["x-vercel-oidc-token"]||process.env.VERCEL_OIDC_TOKEN),
     tutorAIRuntime:"vercel-ai-gateway",tutorAIModel:FREE_MODEL,
     tutorAIFreeOnly:true,tutorAIStatus:"configured-not-probed",
     tutorDeadlineMs:Number(process.env.BIOMED_AI_TIMEOUT_MS||19000),
