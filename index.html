@@ -6,11 +6,28 @@
   <meta name="description" content="BIOMED — plataforma de estudo guiado de fisiologia sensorial, nocicepção e modulação da dor.">
   <meta name="theme-color" content="#0d2234">
   <title>BIOMED | Estudo guiado</title>
+  <!-- O estado da sessão é detectado antes da primeira exibição da página. -->
+  <style>
+    #biomedBoot{display:none;position:fixed;inset:0;place-items:center;background:#f4f8fb;color:#142438;font:700 1rem system-ui,sans-serif;text-align:center;padding:24px}
+    #biomedBoot strong{display:block;font-size:1.4rem;margin-bottom:8px}
+    html.biomed-restoring-session #authGate{display:none!important}
+    html.biomed-restoring-session:not(.biomed-ready) #biomedBoot{display:grid}
+    html.biomed-restoring-session:not(.biomed-ready) #studyApp{display:none}
+  </style>
+  <script>
+    try{
+      const s=JSON.parse(localStorage.getItem("biomed-student-session-v1")||"null");
+      if(s&&s.mode==="server"&&typeof s.token==="string"&&s.token){
+        document.documentElement.classList.add("biomed-restoring-session");
+      }
+    }catch{}
+  </script>
   <link rel="stylesheet" href="/auth.css">
   <link rel="stylesheet" href="/learning-components.css">
   <link rel="stylesheet" href="/study-shell.css">
 </head>
 <body>
+  <div id="biomedBoot" role="status" aria-live="polite"><div><strong>🧠 BIOMED</strong>Carregando seu ambiente de estudos...</div></div>
   <main id="authGate" class="auth-gate">
     <section class="auth-shell" aria-labelledby="authTitle">
       <div class="auth-intro">
