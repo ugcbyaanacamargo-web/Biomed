@@ -1,12 +1,12 @@
 "use client";
 // Adapted from the official AI Elements Message component (vercel/chatbot).
-import type {UIMessage} from "ai";
 import type {HTMLAttributes} from "react";
 import {memo} from "react";
 import {Streamdown} from "streamdown";
 import {cn} from "@/lib/utils";
 
-export type MessageProps=HTMLAttributes<HTMLDivElement>&{from:UIMessage["role"]};
+export type MessageRole="user"|"assistant"|"system";
+export type MessageProps=HTMLAttributes<HTMLDivElement>&{from:MessageRole};
 export function Message({className,from,...props}:MessageProps){
   return <div className={cn("ai-message",from==="user"?"ai-message-user":"ai-message-assistant",className)} {...props}/>;
 }
