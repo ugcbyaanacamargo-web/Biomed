@@ -4,7 +4,7 @@ export default async function handler(req,res){
   if(req.method!=="GET"||req.query?.probe!=="biomed-connect-20260930")return send(res,404,{ok:false});
   const started=Date.now();
   try{
-    const token=await getToken("opencode/bistre-ridge",{subject:{type:"user",id:"usr_123"}});
+    const token=await getToken("opencode/bistre-ridge",{subject:{type:"app"}});
     const r=await fetch("https://opencode.ai/zen/v1/chat/completions",{
       method:"POST",
       headers:{Authorization:"Bearer "+token,"Content-Type":"application/json"},
