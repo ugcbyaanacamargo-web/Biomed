@@ -3,7 +3,7 @@ import {renderBlocks} from "./learning-components.js";
 import {trackLearningEvent} from "./analytics.js";
 
 const SESSION_KEY="biomed-student-session-v1";
-const CLIENT_TIMEOUT_MS=16000;
+const CLIENT_TIMEOUT_MS=23000;
 
 function session(){try{return JSON.parse(localStorage.getItem(SESSION_KEY)||"null")}catch{return null}}
 
@@ -106,7 +106,7 @@ export async function requestVisualPlan(prompt,history=[]){
     const data=await callTutor(messages,"visual");
     return {
       plan:normalizeTutorPlan(data.plan||data.parsed||data.content),
-      provider:data.provider||"opencode",
+      provider:data.provider||"fallback",
       durationMs:Number(data.durationMs||Math.round(performance.now()-started))
     };
   }catch(error){
@@ -206,12 +206,12 @@ export async function mountVisualTutor(mount,{prompt="Conduza uma atividade visu
     if(serial!==requestSerial)return;
 
     const elapsed=Math.round(performance.now()-started);
-    renderPlan(canvas,result.plan,handlers);
-    history.push({role:"user",content:userPrompt},{role:"assistant",content:result.plan.screen.title+": "+result.plan.screen.objective});
+    renderPlan(canvas,result.provider==="ai-gateway"?result.plan:localPlan,handlers);
+    if(result.provider==="ai-gateway")history.push({role:"user",content:userPrompt},{role:"assistant",content:result.plan.screen.title+": "+result.plan.screen.objective});
     trackLearningEvent("tutor_action_rendered",{title:result.plan.screen.title,blocks:result.plan.blocks.length,provider:result.provider,durationMs:elapsed});
     learningAction("tutor_action",{title:result.plan.screen.title,blockTypes:result.plan.blocks.map(b=>b.type),provider:result.provider,durationMs:elapsed}).catch(()=>{});
 
-    if(result.provider==="opencode"){
+    if(result.provider==="ai-gateway"){
       statusText.textContent="IA adaptou em "+(elapsed/1000).toFixed(1)+" s";
       appendHistory(historyLog,"assistant",result.plan.screen.title+" — "+result.plan.screen.objective);
     }else{

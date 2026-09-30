@@ -1,34 +1,26 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {readFile} from "node:fs/promises";
-
-const index=await readFile(new URL("../index.html",import.meta.url),"utf8");
-const pkg=JSON.parse(await readFile(new URL("../package.json",import.meta.url),"utf8"));
-const tutor=await readFile(new URL("../api/tutor.js",import.meta.url),"utf8");
-const local=await readFile(new URL("../api/_lib/opencode-local.js",import.meta.url),"utf8");
-const server=await readFile(new URL("../server.js",import.meta.url),"utf8");
-const config=await readFile(new URL("../opencode.json",import.meta.url),"utf8");
-const visual=await readFile(new URL("../visual-tutor.js",import.meta.url),"utf8");
-
-test("frontend has one student app instead of layered legacy apps",()=>{
-  assert.match(index,/auth\.js/);
-  assert.match(index,/study-platform\.js/);
-  for(const old of ["student-app.js","adaptive-engine.js","browser-tutor.js","learning-bridge.js","app.js"])assert.doesNotMatch(index,new RegExp(old.replace(".","\\.")));
+import {readFile,access} from "node:fs/promises";
+const src=path=>readFile(new URL("../"+path,import.meta.url),"utf8");
+const index=await src("index.html"),tutor=await src("api/tutor.js"),gateway=await src("api/_lib/ai-gateway.js");
+const server=await src("server.js"),visual=await src("visual-tutor.js"),pkg=JSON.parse(await src("package.json"));
+test("single student app and no legacy overlapping portal",()=>{
+  assert.match(index,/auth\.js/);assert.match(index,/study-platform\.js/);
+  assert.match(index,/biomed-restoring-session/);
+  for(const old of ["student-app.js","adaptive-engine.js","browser-tutor.js","learning-bridge.js","app.js"])assert.ok(!index.includes('src="/'+old+'"'));
 });
-
-test("free Tutor runs inside one persistent OpenCode process on Railway",()=>{
-  assert.match(tutor,/runOpenCodeLocalTutor/);
-  assert.match(tutor,/TUTOR_RAILWAY_URL/);
-  assert.match(local,/opencode/);
-  assert.match(local,/serve/);
-  assert.match(server,/warmOpenCodeLocal/);
-  assert.match(config,/biomed-tutor/);
-  assert.match(config,/"\*": "deny"/);
-  assert.equal(pkg.dependencies["@vercel/sandbox"],undefined);
-  assert.equal(pkg.dependencies["opencode-ai"],"1.18.33");
+test("Tutor runs on Vercel gateway without OpenCode, Sandbox or Railway",async()=>{
+  assert.match(tutor,/callTutorAI/);assert.match(gateway,/ai-gateway\.vercel\.sh\/v1\/chat\/completions/);
+  assert.match(tutor,/VERCEL_OIDC_TOKEN/);
+  for(const old of ["runOpenCodeLocalTutor","TUTOR_RAILWAY_URL","proxyTutorToRailway","opencode serve"])assert.ok(!tutor.includes(old));
+  assert.ok(!server.includes("warmOpenCodeLocal"));
+  assert.ok(!("opencode-ai" in pkg.dependencies));
+  for(const old of ["api/_lib/opencode-local.js","api/_lib/model-benchmark.js","opencode.json"]){
+    await assert.rejects(access(new URL("../"+old,import.meta.url)));
+  }
 });
-
-test("visual tutor keeps immediate safe activity while cloud AI refines it",()=>{
+test("visual tutor is immediate and visibly distinguishes real AI from local fallback",()=>{
   assert.match(visual,/localTutorPlan/);
   assert.match(visual,/renderPlan\(canvas,localPlan/);
+  assert.match(visual,/result\.provider==="ai-gateway"/);
 });
