@@ -112,7 +112,7 @@ export function ChatShell({session,onLogout}:{session:{token:string;student?:Stu
     </aside>
     {sidebar&&<button className="sidebar-backdrop" onClick={()=>setSidebar(false)} aria-label="Fechar menu"/>}
     <section className="chat-main">
-      <header className="chat-header"><button className="mobile-menu" onClick={()=>setSidebar(true)}><Menu/></button><div><span className="tutor-dot"/><div><strong>Tutor BIOMED</strong><small>GPT-OSS 120B • professor adaptativo</small></div></div><button className="header-new" onClick={()=>void createConversation()}><Plus size={18}/><span>Nova conversa</span></button></header>
+      <header className="chat-header"><button className="mobile-menu" onClick={()=>setSidebar(true)}><Menu/></button><div><span className="tutor-dot"/><div><strong>Tutor BIOMED</strong><small>Nemotron 3.5 Lightning • professor adaptativo</small></div></div><button className="header-new" onClick={()=>void createConversation()}><Plus size={18}/><span>Nova conversa</span></button></header>
       <div className="chat-stage">
         {loading?<div className="center-state"><div className="brain-loader"><Brain/></div><strong>Preparando seu ambiente...</strong></div>:
         <Conversation><ConversationContent>
