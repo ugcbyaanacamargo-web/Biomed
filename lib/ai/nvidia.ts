@@ -41,6 +41,22 @@ function usageNumbers(usage?:Usage){
   };
 }
 
+export function cleanJsonSchema(schema:unknown):unknown{
+  if(Array.isArray(schema))return schema.map(cleanJsonSchema);
+  if(!schema||typeof schema!=="object")return schema;
+  const source=schema as Record<string,unknown>;
+  const cleaned:Record<string,unknown>={};
+  for(const [key,value] of Object.entries(source)){
+    if(key==="$schema"||key==="format")continue;
+    cleaned[key]=cleanJsonSchema(value);
+  }
+  return cleaned;
+}
+
+const TUTOR_JSON_SCHEMA=cleanJsonSchema(
+  z.toJSONSchema(richTutorTurnSchema,{target:"draft-2020-12"})
+);
+
 async function callNvidia(messages:Array<{role:string;content:string}>):Promise<NvidiaResponse>{
   assertConfigured();
   const response=await fetch(ENDPOINT,{
@@ -56,7 +72,13 @@ async function callNvidia(messages:Array<{role:string;content:string}>):Promise<
       temperature:0.2,
       top_p:0.9,
       max_tokens:MAX_TOKENS,
-      response_format:{type:"json_object"},
+      response_format:{
+        type:"json_schema",
+        json_schema:{
+          name:"biomed_tutor_turn",
+          schema:TUTOR_JSON_SCHEMA
+        }
+      },
       chat_template_kwargs:{enable_thinking:false},
       stream:false
     }),

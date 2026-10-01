@@ -36,7 +36,10 @@ describe("NVIDIA DiffusionGemma provider",()=>{
     const body=JSON.parse(String(init?.body));
     expect(body.model).toBe("google/diffusiongemma-26b-a4b-it");
     expect(body.chat_template_kwargs).toEqual({enable_thinking:false});
-    expect(body.response_format).toEqual({type:"json_object"});
+    expect(body.response_format.type).toBe("json_schema");
+    expect(body.response_format.json_schema.name).toBe("biomed_tutor_turn");
+    expect(body.response_format.json_schema.schema.type).toBe("object");
+    expect(JSON.stringify(body.response_format.json_schema.schema)).not.toContain('"format"');
     expect(body.max_tokens).toBeLessThanOrEqual(650);
   });
 
