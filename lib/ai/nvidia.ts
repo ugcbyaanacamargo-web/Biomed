@@ -1,5 +1,5 @@
 import {z} from "zod";
-import {richTutorTurnSchema,type RichTutorTurn} from "./tutor-schema";
+import {learningUpdateSchema,richBlockSchema,richTutorTurnSchema,type RichTutorTurn} from "./tutor-schema";
 import {buildSystemPrompt,recentModelMessages,type TutorContext} from "./context-builder";
 import {sanitizeTurn} from "./learning";
 import {searchBiomedicalSources,type BiomedicalSource} from "./web-research";
@@ -127,6 +127,57 @@ function extractJsonObject(content:string){
   return normalized.slice(first,last+1);
 }
 
+function record(value:unknown):Record<string,unknown>|null{
+  return value&&typeof value==="object"&&!Array.isArray(value)?value as Record<string,unknown>:null;
+}
+
+function recoverTurn(json:unknown):RichTutorTurn|null{
+  const root=record(json);
+  const message=typeof root?.message==="string"?root.message.trim().slice(0,6000):"";
+  if(!message)return null;
+
+  const blocks=Array.isArray(root?.blocks)
+    ?root.blocks.flatMap(block=>{
+      const parsed=richBlockSchema.safeParse(block);
+      return parsed.success?[parsed.data]:[];
+    }).slice(0,3)
+    :[];
+
+  const parsedLearning=learningUpdateSchema.safeParse(root?.learning);
+  const learning=parsedLearning.success?parsedLearning.data:{
+    mode:"teach" as const,
+    currentGoal:"",
+    nextGoal:"",
+    progress:0,
+    objectives:[],
+    mastered:[],
+    struggling:[],
+    misconceptions:[]
+  };
+
+  const rawConversation=record(root?.conversation);
+  const title=typeof rawConversation?.suggestedTitle==="string"
+    ?rawConversation.suggestedTitle.trim().slice(0,80)
+    :"";
+  const memorySummary=typeof rawConversation?.memorySummary==="string"
+    ?rawConversation.memorySummary.trim().slice(0,5000)
+    :"";
+
+  return sanitizeTurn({
+    schemaVersion:1,
+    message,
+    blocks,
+    learning,
+    conversation:{
+      suggestedTitle:title||"Estudo BIOMED",
+      memorySummary,
+      shouldSummarize:typeof rawConversation?.shouldSummarize==="boolean"
+        ?rawConversation.shouldSummarize
+        :false
+    }
+  });
+}
+
 function parseTurn(content:string){
   let json:unknown;
   try{json=JSON.parse(extractJsonObject(content))}
@@ -135,8 +186,10 @@ function parseTurn(content:string){
     throw Object.assign(new Error("JSON inválido da IA"),{status:502});
   }
   const parsed=richTutorTurnSchema.safeParse(json);
-  if(!parsed.success)throw Object.assign(new Error("Resposta estruturada inválida da IA"),{status:502});
-  return sanitizeTurn({...parsed.data,blocks:parsed.data.blocks.slice(0,3)});
+  if(parsed.success)return sanitizeTurn({...parsed.data,blocks:parsed.data.blocks.slice(0,3)});
+  const recovered=recoverTurn(json);
+  if(recovered)return recovered;
+  throw Object.assign(new Error("Resposta estruturada inválida da IA"),{status:502});
 }
 
 function baseMessages(context:TutorContext,extraSystem=""){
