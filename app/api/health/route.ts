@@ -4,7 +4,7 @@ import {NVIDIA_MODEL} from "@/lib/ai/nvidia";
 export async function GET(){
   return noStoreJson({
     ok:true,
-    architecture:"ai-first-conversational-v4",
+    architecture:"ai-first-conversational-v4.1-diffusiongemma",
     framework:"nextjs",
     tutorAIConfigured:Boolean(process.env.NVIDIA_API_KEY),
     tutorAIProvider:"nvidia",
