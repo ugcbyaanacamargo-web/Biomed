@@ -109,10 +109,31 @@ function assistantText(data:NvidiaResponse){
   return content.trim();
 }
 
+function extractJsonObject(content:string){
+  const normalized=content
+    .replace(/<\|[^|>]+\|>/g,"")
+    .replace(/```json/gi,"")
+    .replace(/```/g,"")
+    .trim();
+
+  try{
+    JSON.parse(normalized);
+    return normalized;
+  }catch{}
+
+  const first=normalized.indexOf("{");
+  const last=normalized.lastIndexOf("}");
+  if(first<0||last<=first)throw Object.assign(new Error("JSON inválido da IA"),{status:502});
+  return normalized.slice(first,last+1);
+}
+
 function parseTurn(content:string){
-  const raw=content.trim().replace(/^```json\s*/i,"").replace(/\s*```$/,"");
   let json:unknown;
-  try{json=JSON.parse(raw)}catch{throw Object.assign(new Error("JSON inválido da IA"),{status:502})}
+  try{json=JSON.parse(extractJsonObject(content))}
+  catch(error){
+    if((error as {status?:number})?.status)throw error;
+    throw Object.assign(new Error("JSON inválido da IA"),{status:502});
+  }
   const parsed=richTutorTurnSchema.safeParse(json);
   if(!parsed.success)throw Object.assign(new Error("Resposta estruturada inválida da IA"),{status:502});
   return sanitizeTurn({...parsed.data,blocks:parsed.data.blocks.slice(0,3)});
