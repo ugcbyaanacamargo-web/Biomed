@@ -43,6 +43,22 @@ describe("NVIDIA DiffusionGemma provider",()=>{
     expect(body.max_tokens).toBeLessThanOrEqual(650);
   });
 
+  it("accepts a valid JSON object wrapped by model text or markdown fences",async()=>{
+    const wrapped=`<|channel|>final\n\`\`\`json\n${JSON.stringify(validTurn)}\n\`\`\``;
+    const fetchMock=vi.fn(async()=>new Response(JSON.stringify({
+      choices:[{message:{content:wrapped},finish_reason:"stop"}],
+      usage:{prompt_tokens:100,completion_tokens:80}
+    }),{status:200,headers:{"Content-Type":"application/json"}}));
+    vi.stubGlobal("fetch",fetchMock);
+
+    const result=await generateStructuredTutorTurn({
+      student:{level:"bronze",learningScore:0},
+      messages:[{role:"user",content:"oi"}]
+    });
+
+    expect(result.turn.message).toBe("Vamos estudar fibras.");
+  });
+
   it("uses only one provider call on timeout",async()=>{
     const fetchMock=vi.fn().mockRejectedValue(new DOMException("The operation was aborted due to timeout","TimeoutError"));
     vi.stubGlobal("fetch",fetchMock);
