@@ -52,6 +52,8 @@ export async function GET(){
       model:NVIDIA_MODEL,
       latencyMs:Date.now()-started,
       validJson,
+      contentPreview:content.slice(0,800),
+      contentType:typeof data?.choices?.[0]?.message?.content,
       usage:data?.usage||null
     },response.ok?200:502);
   }catch(error){
