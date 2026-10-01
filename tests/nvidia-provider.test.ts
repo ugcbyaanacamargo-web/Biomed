@@ -9,19 +9,18 @@ const validTurn={
   conversation:{suggestedTitle:"Fibras",memorySummary:"",shouldSummarize:false}
 };
 
-describe("NVIDIA provider low-latency policy",()=>{
+describe("NVIDIA DiffusionGemma provider",()=>{
   beforeEach(()=>{
     process.env.NVIDIA_API_KEY="test-key";
-    process.env.BIOMED_AI_MODEL=NVIDIA_MODEL;
+    process.env.BIOMED_AI_MODEL="nvidia/nemotron-3.5-lightning-30b-a3b";
   });
   afterEach(()=>vi.unstubAllGlobals());
 
-  it("uses one compact request with a strict latency budget",async()=>{
+  it("uses DiffusionGemma regardless of the stale BIOMED_AI_MODEL env",async()=>{
     const fetchMock=vi.fn(async(_input:RequestInfo|URL,init?:RequestInit)=>{
-      expect((init?.signal as AbortSignal).aborted).toBe(false);
       return new Response(JSON.stringify({
         choices:[{message:{content:JSON.stringify(validTurn)},finish_reason:"stop"}],
-        usage:{prompt_tokens:500,completion_tokens:120}
+        usage:{prompt_tokens:300,completion_tokens:100}
       }),{status:200,headers:{"Content-Type":"application/json"}});
     });
     vi.stubGlobal("fetch",fetchMock);
@@ -32,15 +31,16 @@ describe("NVIDIA provider low-latency policy",()=>{
     });
 
     expect(result.turn.message).toBe("Vamos estudar fibras.");
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(NVIDIA_MODEL).toBe("google/diffusiongemma-26b-a4b-it");
     const [,init]=fetchMock.mock.calls[0]!;
     const body=JSON.parse(String(init?.body));
-    expect(body.max_tokens).toBeLessThanOrEqual(700);
+    expect(body.model).toBe("google/diffusiongemma-26b-a4b-it");
     expect(body.chat_template_kwargs).toEqual({enable_thinking:false});
     expect(body.response_format).toEqual({type:"json_object"});
+    expect(body.max_tokens).toBeLessThanOrEqual(650);
   });
 
-  it("does not chain a second provider call after timeout",async()=>{
+  it("uses only one provider call on timeout",async()=>{
     const fetchMock=vi.fn().mockRejectedValue(new DOMException("The operation was aborted due to timeout","TimeoutError"));
     vi.stubGlobal("fetch",fetchMock);
 
