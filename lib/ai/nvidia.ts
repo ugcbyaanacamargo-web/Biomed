@@ -4,7 +4,7 @@ import {buildSystemPrompt,recentModelMessages,type TutorContext} from "./context
 import {sanitizeTurn} from "./learning";
 import {searchBiomedicalSources,type BiomedicalSource} from "./web-research";
 
-export const NVIDIA_MODEL="nvidia/nemotron-3.5-lightning-30b-a3b";
+export const NVIDIA_MODEL="google/diffusiongemma-26b-a4b-it";
 const ENDPOINT="https://integrate.api.nvidia.com/v1/chat/completions";
 const TIMEOUT_MS=9000;
 const MAX_TOKENS=650;
@@ -32,8 +32,6 @@ Se uma explicação simples bastar, blocks pode ser [].
 
 function assertConfigured(){
   if(!process.env.NVIDIA_API_KEY)throw Object.assign(new Error("NVIDIA_API_KEY ausente"),{status:503});
-  const configured=String(process.env.BIOMED_AI_MODEL||NVIDIA_MODEL).trim();
-  if(configured!==NVIDIA_MODEL)throw Object.assign(new Error("Modelo BIOMED não autorizado"),{status:503});
 }
 
 function usageNumbers(usage?:Usage){

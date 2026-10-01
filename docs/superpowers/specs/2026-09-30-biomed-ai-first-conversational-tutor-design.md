@@ -30,7 +30,7 @@ O frontend cuida de autenticação, segurança, persistência, validação e ren
 - componentes próprios BIOMED para Rich Learning UI;
 - Supabase PostgreSQL;
 - NVIDIA Build Free Endpoint;
-- modelo `nvidia/nemotron-3.5-lightning-30b-a3b`;
+- modelo `google/diffusiongemma-26b-a4b-it`;
 - Europe PMC para recuperação de literatura biomédica atual;
 - PostHog para produto e AI Observability;
 - Vercel para deploy.
@@ -42,7 +42,7 @@ Aluno
 → /api/chat
 → memória + histórico Supabase
 → NVIDIA integrate.api.nvidia.com
-→ Nemotron 3.5 Lightning
+→ DiffusionGemma 26B A4B
 → JSON validado
 → Rich Learning UI
 → persistência
@@ -54,7 +54,7 @@ Fluxo de pesquisa:
 Aluno pede informação atual
 → Europe PMC REST API
 → artigos/abstracts recentes
-→ Nemotron sintetiza somente com as fontes recuperadas
+→ DiffusionGemma sintetiza somente com as fontes recuperadas
 → resposta rica + bloco de fontes confiável
 ```
 
@@ -65,7 +65,7 @@ Não há OpenCode, Railway, Vercel Sandbox, AI Gateway ou fallback automático p
 Modelo fixo:
 
 ```
-nvidia/nemotron-3.5-lightning-30b-a3b
+google/diffusiongemma-26b-a4b-it
 ```
 
 Endpoint:
@@ -80,7 +80,7 @@ Para turnos estruturados:
 - `chat_template_kwargs.enable_thinking: false`;
 - `stream: false`;
 - saída validada com Zod;
-- uma única tentativa de reparo quando o JSON estiver inválido.
+- nenhuma segunda chamada automática quando o JSON estiver inválido; o turno falha rapidamente para preservar latência.
 
 Thinking fica desligado no caminho normal para reduzir latência e evitar consumir orçamento antes do JSON pedagógico.
 
@@ -156,7 +156,7 @@ O servidor:
 
 1. detecta intenção atual/pesquisa;
 2. busca até cinco registros `resultType=core`;
-3. envia título, ano, autores, URL e resumo ao Nemotron;
+3. envia título, ano, autores, URL e resumo ao DiffusionGemma;
 4. remove qualquer bloco `sources` inventado pelo modelo;
 5. adiciona as fontes reais recuperadas pelo servidor.
 
@@ -223,7 +223,7 @@ A entrega permanece válida somente se:
 4. IA gera conteúdo e sequência;
 5. IA gera diagramas e interações;
 6. cliques continuam o mesmo fluxo;
-7. modelo principal é o Nemotron fixo;
+7. modelo principal é o DiffusionGemma fixo;
 8. NVIDIA é chamada diretamente;
 9. pesquisa atual usa fontes reais;
 10. PII reconhecível é redigida;
