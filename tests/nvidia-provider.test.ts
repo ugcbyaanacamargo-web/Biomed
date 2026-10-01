@@ -59,6 +59,35 @@ describe("NVIDIA DiffusionGemma provider",()=>{
     expect(result.turn.message).toBe("Vamos estudar fibras.");
   });
 
+  it("keeps the conversational message when optional structured fields are invalid",async()=>{
+    const malformed={
+      schemaVersion:1,
+      message:"Sim. Vamos seguir pela via espinotalâmica.",
+      blocks:[{type:"unknown_block",content:"ignorar"}],
+      learning:{mode:"conversation",progress:999},
+      conversation:{suggestedTitle:"",memorySummary:42,shouldSummarize:"no"}
+    };
+    const fetchMock=vi.fn(async()=>new Response(JSON.stringify({
+      choices:[{message:{content:JSON.stringify(malformed)},finish_reason:"stop"}],
+      usage:{prompt_tokens:120,completion_tokens:60}
+    }),{status:200,headers:{"Content-Type":"application/json"}}));
+    vi.stubGlobal("fetch",fetchMock);
+
+    const result=await generateStructuredTutorTurn({
+      student:{level:"bronze",learningScore:0},
+      messages:[
+        {role:"assistant",content:"Você sabe que existem diferentes tipos de fibras nervosas para isso?"},
+        {role:"user",content:"sim"}
+      ]
+    });
+
+    expect(result.turn.message).toBe("Sim. Vamos seguir pela via espinotalâmica.");
+    expect(result.turn.blocks).toEqual([]);
+    expect(result.turn.learning.mode).toBe("teach");
+    expect(result.turn.learning.progress).toBe(0);
+    expect(result.turn.conversation.suggestedTitle).toBe("Estudo BIOMED");
+  });
+
   it("uses only one provider call on timeout",async()=>{
     const fetchMock=vi.fn().mockRejectedValue(new DOMException("The operation was aborted due to timeout","TimeoutError"));
     vi.stubGlobal("fetch",fetchMock);
