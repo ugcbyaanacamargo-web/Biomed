@@ -19,7 +19,7 @@ describe("NVIDIA provider",()=>{
   });
   afterEach(()=>vi.unstubAllGlobals());
 
-  it("calls the NVIDIA endpoint with Nemotron, JSON mode and thinking disabled",async()=>{
+  it("uses compact JSON mode and keeps the normal output budget small",async()=>{
     const fetchMock=vi.fn(async(_input:RequestInfo|URL,init?:RequestInit)=>{
       return new Response(JSON.stringify({
         choices:[{message:{content:JSON.stringify(validTurn)},finish_reason:"stop"}],
@@ -28,19 +28,37 @@ describe("NVIDIA provider",()=>{
     });
     vi.stubGlobal("fetch",fetchMock);
 
+    await generateStructuredTutorTurn({
+      student:{level:"bronze",learningScore:0},
+      messages:[{role:"user",content:"Explique fibras C"}]
+    });
+
+    const [,init]=fetchMock.mock.calls[0]!;
+    const body=JSON.parse(String(init?.body));
+    expect(body.model).toBe(NVIDIA_MODEL);
+    expect(body.response_format).toEqual({type:"json_object"});
+    expect(body.chat_template_kwargs).toEqual({enable_thinking:false});
+    expect(body.stream).toBe(false);
+    expect(body.max_tokens).toBeLessThanOrEqual(1200);
+  });
+
+  it("retries once with a smaller budget after a provider timeout",async()=>{
+    const fetchMock=vi.fn()
+      .mockRejectedValueOnce(new DOMException("The operation was aborted due to timeout","TimeoutError"))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        choices:[{message:{content:JSON.stringify(validTurn)},finish_reason:"stop"}],
+        usage:{prompt_tokens:90,completion_tokens:60}
+      }),{status:200,headers:{"Content-Type":"application/json"}}));
+    vi.stubGlobal("fetch",fetchMock);
+
     const result=await generateStructuredTutorTurn({
       student:{level:"bronze",learningScore:0},
       messages:[{role:"user",content:"Explique fibras C"}]
     });
 
     expect(result.turn.message).toBe("Vamos estudar fibras.");
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    const [url,init]=fetchMock.mock.calls[0]!;
-    expect(String(url)).toBe("https://integrate.api.nvidia.com/v1/chat/completions");
-    const body=JSON.parse(String(init?.body));
-    expect(body.model).toBe(NVIDIA_MODEL);
-    expect(body.response_format).toEqual({type:"json_object"});
-    expect(body.chat_template_kwargs).toEqual({enable_thinking:false});
-    expect(body.stream).toBe(false);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const secondBody=JSON.parse(String(fetchMock.mock.calls[1]![1]?.body));
+    expect(secondBody.max_tokens).toBeLessThanOrEqual(700);
   });
 });
