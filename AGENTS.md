@@ -2,78 +2,38 @@
 
 ## Regra principal
 
-O BIOMED é uma aplicação educacional **AI-first**.
+O BIOMED é uma aplicação educacional **AI-first**. Depois do login, o Tutor IA é a experiência principal; não existe curso rígido concorrente.
 
-Depois do login, o Tutor IA é a experiência principal. O frontend não contém um curso rígido concorrente com a IA. O GPT-OSS 120B decide a sequência pedagógica usando currículo amplo, memória do aluno e conversa.
-
-A especificação vigente é:
-
-`docs/superpowers/specs/2026-09-30-biomed-ai-first-conversational-tutor-design.md`
-
-Ela substitui as decisões arquiteturais anteriores quando houver conflito.
+A especificação vigente é `docs/superpowers/specs/2026-09-30-biomed-ai-first-conversational-tutor-design.md`.
 
 ## Arquitetura permanente
 
-1. Frontend alvo: Next.js App Router + React + TypeScript.
+1. Next.js App Router + React + TypeScript.
 2. Chat persistente como interface principal.
-3. GPT-OSS 120B via Groq direta; sem AI Gateway, OpenCode, Railway ou Sandbox.
-4. O Tutor gera narrativa, conteúdo rico, diagramas, comparações, botões, exercícios e fluxo pedagógico por dados estruturados.
-5. O modelo nunca gera/executa HTML, JSX, CSS ou JavaScript arbitrário.
-6. Blocos ricos são renderizados por componentes React allow-listed e validados.
-7. Conversas, mensagens e memória pedagógica persistem no Supabase.
-8. CPF nunca é enviado à IA.
-9. O navegador não recebe segredos da Groq nem privilégios administrativos do Supabase.
-10. PostHog mede produto e chamadas LLM sem CPF.
-11. O modelo principal é fixo: `openai/gpt-oss-120b`.
-12. Busca web é usada somente quando necessária e respeita a incompatibilidade da Groq entre `browser_search` e Structured Outputs.
+3. Modelo principal fixo: `nvidia/nemotron-3.5-lightning-30b-a3b`.
+4. Endpoint principal direto: `https://integrate.api.nvidia.com/v1/chat/completions`.
+5. Turnos estruturados usam JSON mode e `enable_thinking:false`; saída sempre é validada no servidor.
+6. Pesquisa atual biomédica usa Europe PMC; o modelo recebe resultados recuperados e não inventa fontes.
+7. O Tutor gera narrativa, diagramas, comparações, botões, exercícios e fluxo pedagógico por dados estruturados.
+8. O modelo nunca gera/executa HTML, JSX, CSS, JavaScript ou SVG arbitrário.
+9. Conversas, mensagens e memória pedagógica persistem no Supabase.
+10. CPF, e-mail, telefone e nome do aluno não são enviados ao provider.
+11. O navegador não recebe segredos NVIDIA nem privilégios administrativos do Supabase.
+12. PostHog mede produto e chamadas LLM sem PII.
+13. Sem AI Gateway, OpenCode, Railway, Sandbox ou fallback automático pago.
 
 ## Regra de limpeza
 
-A reconstrução não pode criar uma segunda aplicação por cima da anterior.
-
-Quando a substituição estiver funcional e verificada:
-
-- apagar código, testes e documentação que ficaram sem consumidor;
-- mover somente assets realmente usados;
-- remover imports e rotas mortas;
-- não manter arquivos “por garantia”;
-- não deixar TODO, placeholder ou componente sem ação;
-- não manter fallback local fingindo ser resposta da IA.
-
-Arquivos antigos citados como candidatos a remoção estão listados na especificação.
+Não manter segunda arquitetura, arquivo morto, TODO, placeholder, fallback local fingindo ser IA ou documentação contraditória. Código substituído deve ser apagado depois da validação.
 
 ## Segurança do banco
 
-O Supabase atual também contém tabelas de outro sistema. Alterações e limpezas desta reconstrução devem atingir exclusivamente objetos BIOMED.
-
-Toda operação privilegiada deve:
-
-- derivar o aluno da sessão;
-- ignorar `student_id` fornecido pelo navegador;
-- limitar `SECURITY DEFINER`;
-- revogar `PUBLIC EXECUTE` quando aplicável;
-- manter RLS;
-- rodar advisors depois de migrations.
+Alterações atingem somente objetos BIOMED. Toda operação privilegiada deriva o aluno da sessão, ignora `student_id` do navegador, mantém RLS e privilégios mínimos.
 
 ## Verificação obrigatória
 
-Nenhuma etapa é concluída apenas porque o código foi escrito.
-
-Exigir:
-
-- testes;
-- build;
-- preview Vercel;
-- fluxo real no navegador;
-- chamada real à Groq;
-- persistência real no Supabase;
-- PostHog recebendo eventos;
-- varredura de código legado sem uso antes do merge final.
+Antes de concluir: testes, typecheck, build, preview Vercel, chamada real ao endpoint NVIDIA, persistência Supabase, PostHog e fluxo real no navegador.
 
 ## Produto
 
-O Tutor deve ensinar, não apenas responder.
-
-Cada turno pode escolher o melhor formato pedagógico: texto formatado, desenho/diagrama, processo, comparação, tabela, cartão, caso, pergunta, botões, sequência, revisão ou fontes.
-
-A autoridade pedagógica é da IA. O código local fica responsável por autenticação, segurança, persistência, validação e renderização.
+O Tutor ensina, não apenas responde. Cada turno escolhe a representação pedagógica mais útil: texto, diagrama, processo, comparação, tabela, cartão, caso, pergunta, botões, sequência, revisão ou fontes.
