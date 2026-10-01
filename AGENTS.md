@@ -10,9 +10,9 @@ A especificação vigente é `docs/superpowers/specs/2026-09-30-biomed-ai-first-
 
 1. Next.js App Router + React + TypeScript.
 2. Chat persistente como interface principal.
-3. Modelo principal fixo: `nvidia/nemotron-3.5-lightning-30b-a3b`.
+3. Modelo principal fixo: `google/diffusiongemma-26b-a4b-it`.
 4. Endpoint principal direto: `https://integrate.api.nvidia.com/v1/chat/completions`.
-5. Turnos estruturados usam JSON mode e `enable_thinking:false`; saída sempre é validada no servidor.
+5. Turnos estruturados usam JSON mode e `enable_thinking:false`; saída sempre é validada no servidor e cada turno faz no máximo uma chamada ao provider.
 6. Pesquisa atual biomédica usa Europe PMC; o modelo recebe resultados recuperados e não inventa fontes.
 7. O Tutor gera narrativa, diagramas, comparações, botões, exercícios e fluxo pedagógico por dados estruturados.
 8. O modelo nunca gera/executa HTML, JSX, CSS, JavaScript ou SVG arbitrário.

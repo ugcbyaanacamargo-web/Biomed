@@ -10,7 +10,7 @@ Aluno
   → rotas /api/*
   → sessão BIOMED + Supabase
   → NVIDIA Build Free Endpoint
-  → nvidia/nemotron-3.5-lightning-30b-a3b
+  → google/diffusiongemma-26b-a4b-it
   → Rich Learning UI
   → histórico + memória pedagógica no Supabase
 ```
@@ -32,7 +32,7 @@ Não há OpenCode, Railway, Vercel Sandbox, Vercel AI Gateway ou segundo motor d
 Modelo principal fixo:
 
 ```
-nvidia/nemotron-3.5-lightning-30b-a3b
+google/diffusiongemma-26b-a4b-it
 ```
 
 Endpoint:
@@ -41,7 +41,7 @@ Endpoint:
 https://integrate.api.nvidia.com/v1/chat/completions
 ```
 
-Turnos normais usam `response_format: {"type":"json_object"}`, `enable_thinking:false` e validação Zod no servidor. Se o JSON não obedecer ao contrato, existe uma única tentativa controlada de reparo antes de falhar.
+Turnos normais usam `response_format: {"type":"json_object"}`, `enable_thinking:false` e validação Zod no servidor. A resposta é validada com Zod; JSON inválido falha sem uma segunda chamada ao provider para preservar latência previsível.
 
 O Free Endpoint da NVIDIA é um serviço trial e pode aplicar rate limits; o BIOMED não trata esse endpoint como ilimitado nem troca silenciosamente para modelo pago.
 

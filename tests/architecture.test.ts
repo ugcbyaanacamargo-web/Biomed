@@ -13,12 +13,12 @@ describe("AI-first architecture",()=>{
     for(const path of legacy)expect(existsSync(path),path).toBe(false);
   });
 
-  it("uses NVIDIA Nemotron as the primary direct tutor provider",()=>{
+  it("uses NVIDIA DiffusionGemma as the primary direct tutor provider",()=>{
     expect(existsSync("lib/ai/nvidia.ts")).toBe(true);
     const nvidia=readFileSync("lib/ai/nvidia.ts","utf8");
     const chat=readFileSync("app/api/chat/route.ts","utf8");
     expect(nvidia).toContain("https://integrate.api.nvidia.com/v1/chat/completions");
-    expect(nvidia).toContain("nvidia/nemotron-3.5-lightning-30b-a3b");
+    expect(nvidia).toContain("google/diffusiongemma-26b-a4b-it");
     expect(nvidia).toContain('type:"json_object"');
     expect(nvidia).toContain("enable_thinking:false");
     expect(chat).toContain('@/lib/ai/nvidia');
