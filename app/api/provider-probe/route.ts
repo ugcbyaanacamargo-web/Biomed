@@ -21,7 +21,21 @@ export async function GET(){
         max_tokens:220,
         temperature:0.2,
         top_p:0.9,
-        response_format:{type:"json_object"},
+        response_format:{
+          type:"json_schema",
+          json_schema:{
+            name:"biomed_probe",
+            schema:{
+              type:"object",
+              properties:{
+                message:{type:"string"},
+                blocks:{type:"array",items:{}}
+              },
+              required:["message","blocks"],
+              additionalProperties:false
+            }
+          }
+        },
         chat_template_kwargs:{enable_thinking:false},
         stream:false
       }),
