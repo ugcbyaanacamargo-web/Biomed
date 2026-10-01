@@ -6,12 +6,8 @@ import {searchBiomedicalSources,type BiomedicalSource} from "./web-research";
 
 export const NVIDIA_MODEL="nvidia/nemotron-3.5-lightning-30b-a3b";
 const ENDPOINT="https://integrate.api.nvidia.com/v1/chat/completions";
-const NORMAL_TIMEOUT_MS=13000;
-const RETRY_TIMEOUT_MS=8000;
-const REPAIR_TIMEOUT_MS=5500;
-const NORMAL_MAX_TOKENS=1100;
-const RETRY_MAX_TOKENS=650;
-const REPAIR_MAX_TOKENS=650;
+const TIMEOUT_MS=9000;
+const MAX_TOKENS=650;
 
 type Usage={prompt_tokens?:number;completion_tokens?:number;total_tokens?:number};
 type NvidiaResponse={
@@ -22,16 +18,16 @@ type NvidiaResponse={
 };
 
 const RICH_JSON_CONTRACT=`
-Responda SOMENTE JSON válido neste formato:
-{"schemaVersion":1,"message":"texto ao aluno","blocks":[],"learning":{"mode":"diagnose|teach|practice|review|assessment","currentGoal":"...","nextGoal":"...","progress":0,"objectives":[{"id":"ID_CURRICULO","mastery":0,"confidence":0}],"mastered":[],"struggling":[],"misconceptions":[]},"conversation":{"suggestedTitle":"...","memorySummary":"...","shouldSummarize":false}}
-
-Use no máximo 4 blocks curtos. Tipos permitidos:
-markdown(content); callout(tone,title,body); diagram(variant,title,caption,nodes[{id,label,kind}],edges[{from,to,label}]); comparison(title,columns[{title,subtitle,items[{label,value,emphasis}]}]); steps(title,items[{title,description}]); timeline(title,items[{label,description}]); table(title,columns,rows); flashcards(title,cards[{front,back}]); choice(id,question,options[{label,value}],multiple); true_false(id,statement); short_answer(id,question,placeholder); case(title,scenario,question); sequence(id,instruction,items[{label,value}]); progress(title,items[{label,value}]); sources(items[{title,url,domain}]); suggestions(items[{label,value}]).
-
-diagram.variant: neural_path|gate_control|concept_map|fiber_structure.
-diagram.nodes.kind: receptor|fiber|nerve|spinal_cord|brainstem|thalamus|cortex|interneuron|synapse|concept|body.
-callout.tone: info|key|success|warning.
-IDs: letras/números/_/-. Nunca gere HTML/JS/SVG bruto. Seja visual e conciso; prefira 1-3 blocks.
+Retorne SOMENTE JSON:
+{"schemaVersion":1,"message":"texto curto","blocks":[],"learning":{"mode":"diagnose|teach|practice|review|assessment","currentGoal":"...","nextGoal":"...","progress":0,"objectives":[],"mastered":[],"struggling":[],"misconceptions":[]},"conversation":{"suggestedTitle":"...","memorySummary":"...","shouldSummarize":false}}
+Use no máximo 3 blocks. Priorize:
+- diagram: {"type":"diagram","variant":"neural_path|gate_control|concept_map|fiber_structure","title":"...","caption":"...","nodes":[{"id":"a","label":"...","kind":"receptor|fiber|nerve|spinal_cord|brainstem|thalamus|cortex|interneuron|synapse|concept|body"}],"edges":[{"from":"a","to":"b","label":"..."}]}
+- choice: {"type":"choice","id":"q1","question":"...","options":[{"label":"...","value":"..."}],"multiple":false}
+- steps: {"type":"steps","title":"...","items":[{"title":"...","description":"..."}]}
+- comparison: {"type":"comparison","title":"...","columns":[{"title":"...","subtitle":"...","items":[{"label":"...","value":"...","emphasis":false}]}]}
+- callout: {"type":"callout","tone":"info|key|success|warning","title":"...","body":"..."}
+- markdown: {"type":"markdown","content":"..."}
+Se uma explicação simples bastar, blocks pode ser [].
 `;
 
 function assertConfigured(){
@@ -47,16 +43,7 @@ function usageNumbers(usage?:Usage){
   };
 }
 
-function isTimeout(error:unknown){
-  const e=error as {name?:string;message?:string};
-  return e?.name==="TimeoutError"||/timeout|timed out|aborted/i.test(String(e?.message||""));
-}
-
-async function callNvidia(
-  messages:Array<{role:string;content:string}>,
-  maxTokens:number,
-  timeoutMs:number
-):Promise<NvidiaResponse>{
+async function callNvidia(messages:Array<{role:string;content:string}>):Promise<NvidiaResponse>{
   assertConfigured();
   const response=await fetch(ENDPOINT,{
     method:"POST",
@@ -68,14 +55,14 @@ async function callNvidia(
     body:JSON.stringify({
       model:NVIDIA_MODEL,
       messages,
-      temperature:0.25,
+      temperature:0.2,
       top_p:0.9,
-      max_tokens:maxTokens,
+      max_tokens:MAX_TOKENS,
       response_format:{type:"json_object"},
       chat_template_kwargs:{enable_thinking:false},
       stream:false
     }),
-    signal:AbortSignal.timeout(timeoutMs),
+    signal:AbortSignal.timeout(TIMEOUT_MS),
     cache:"no-store"
   });
 
@@ -104,76 +91,35 @@ function assistantText(data:NvidiaResponse){
 
 function parseTurn(content:string){
   const raw=content.trim().replace(/^```json\s*/i,"").replace(/\s*```$/,"");
-  try{return richTutorTurnSchema.parse(JSON.parse(raw))}
-  catch(error){return {raw,error} as const}
-}
-
-function compactTurn(turn:RichTutorTurn):RichTutorTurn{
-  return sanitizeTurn({...turn,blocks:turn.blocks.slice(0,4)});
-}
-
-async function repairTurn(content:string,context:TutorContext){
-  const first=parseTurn(content);
-  if(!("error" in first))return compactTurn(first);
-
-  const issues=first.error instanceof z.ZodError
-    ? first.error.issues.slice(0,6).map(issue=>`${issue.path.join(".")}: ${issue.message}`).join("\n")
-    : "JSON inválido";
-
-  const repaired=await callNvidia([
-    {role:"system",content:`Corrija o JSON para o contrato BIOMED. Retorne somente JSON. ${RICH_JSON_CONTRACT}`},
-    {role:"user",content:`JSON:\n${String(first.raw).slice(0,9000)}\nERROS:\n${issues}\nContexto resumido: ${String(context.conversation?.currentGoal||"")}`}
-  ],REPAIR_MAX_TOKENS,REPAIR_TIMEOUT_MS);
-
-  const second=parseTurn(assistantText(repaired));
-  if("error" in second)throw Object.assign(new Error("Resposta estruturada inválida da IA"),{status:502});
-  return compactTurn(second);
+  let json:unknown;
+  try{json=JSON.parse(raw)}catch{throw Object.assign(new Error("JSON inválido da IA"),{status:502})}
+  const parsed=richTutorTurnSchema.safeParse(json);
+  if(!parsed.success)throw Object.assign(new Error("Resposta estruturada inválida da IA"),{status:502});
+  return sanitizeTurn({...parsed.data,blocks:parsed.data.blocks.slice(0,3)});
 }
 
 function baseMessages(context:TutorContext,extraSystem=""){
   return[
-    {role:"system",content:`${buildSystemPrompt(context)}\n\n${RICH_JSON_CONTRACT}\n${extraSystem}\nResponda de forma curta o bastante para uma interação. Não tente encerrar vários tópicos em um único turno.`},
+    {role:"system",content:`${buildSystemPrompt(context)}\n\n${RICH_JSON_CONTRACT}\n${extraSystem}\nMantenha o turno curto e interativo.`},
     ...recentModelMessages(context)
   ];
 }
 
-function retryMessages(context:TutorContext,extraSystem=""){
-  const recent=recentModelMessages(context).slice(-8);
-  return[
-    {role:"system",content:`${buildSystemPrompt({...context,messages:[]})}\n\n${RICH_JSON_CONTRACT}\n${extraSystem}\nMODO RÁPIDO: no máximo 2 blocks e explicação curta.`},
-    ...recent
-  ];
-}
-
-async function generateWithFastRetry(context:TutorContext,extraSystem=""){
-  try{
-    const data=await callNvidia(baseMessages(context,extraSystem),NORMAL_MAX_TOKENS,NORMAL_TIMEOUT_MS);
-    return{data,turn:await repairTurn(assistantText(data),context)};
-  }catch(error){
-    if(!isTimeout(error))throw error;
-    const data=await callNvidia(retryMessages(context,extraSystem),RETRY_MAX_TOKENS,RETRY_TIMEOUT_MS);
-    const parsed=parseTurn(assistantText(data));
-    if("error" in parsed)throw Object.assign(new Error("Resposta estruturada inválida da IA após retry rápido"),{status:502});
-    return{data,turn:compactTurn(parsed)};
-  }
-}
-
 export async function generateStructuredTutorTurn(context:TutorContext){
-  const generated=await generateWithFastRetry(context);
+  const data=await callNvidia(baseMessages(context));
   return{
-    turn:generated.turn,
-    usage:usageNumbers(generated.data.usage),
+    turn:parseTurn(assistantText(data)),
+    usage:usageNumbers(data.usage),
     provider:"nvidia" as const,
     model:NVIDIA_MODEL
   };
 }
 
 function sourceContext(sources:BiomedicalSource[]){
-  return sources.slice(0,3).map((source,index)=>`[${index+1}] ${source.title}
-Ano: ${source.year||"não informado"}
-Autores: ${source.authors||"não informado"}
+  return sources.slice(0,2).map((source,index)=>`[${index+1}] ${source.title}
+Ano: ${source.year||"?"}
 URL: ${source.url}
-Resumo: ${source.abstract||"(sem resumo disponível)"}`).join("\n\n");
+Resumo: ${source.abstract.slice(0,650)||"(sem resumo)"}`).join("\n\n");
 }
 
 export async function generateResearchTutorTurn(context:TutorContext,query:string){
@@ -182,19 +128,20 @@ export async function generateResearchTutorTurn(context:TutorContext,query:strin
     throw Object.assign(new Error("Não encontrei literatura biomédica atual suficiente para responder com fontes agora."),{status:503});
   }
 
-  const extra=`Este turno usa literatura atual. Use SOMENTE as fontes abaixo para afirmações atuais. Não invente estudo, autor, data ou URL.\nFONTES:\n${sourceContext(sources)}`;
-  const generated=await generateWithFastRetry(context,extra);
+  const extra=`Use somente estas fontes para fatos atuais:\n${sourceContext(sources)}`;
+  const data=await callNvidia(baseMessages(context,extra));
+  const parsed=parseTurn(assistantText(data));
   const trustedSources={
     type:"sources" as const,
-    items:sources.slice(0,4).map(source=>({title:source.title,url:source.url,domain:source.domain}))
+    items:sources.slice(0,3).map(source=>({title:source.title,url:source.url,domain:source.domain}))
   };
   const turn:RichTutorTurn={
-    ...generated.turn,
-    blocks:[...generated.turn.blocks.filter(block=>block.type!=="sources").slice(0,3),trustedSources]
+    ...parsed,
+    blocks:[...parsed.blocks.filter(block=>block.type!=="sources").slice(0,2),trustedSources]
   };
   return{
     turn,
-    usage:usageNumbers(generated.data.usage),
+    usage:usageNumbers(data.usage),
     provider:"nvidia" as const,
     model:NVIDIA_MODEL
   };
