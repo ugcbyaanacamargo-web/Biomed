@@ -15,18 +15,19 @@ export async function captureEvent(distinctId:string,event:string,properties:Rec
 
 export async function captureGeneration(input:{
   distinctId:string;conversationId:string;traceId:string;latencyMs:number;
-  inputTokens?:number;outputTokens?:number;error?:string;web:boolean
+  inputTokens?:number;outputTokens?:number;error?:string;research:boolean;
+  provider:string;model:string
 }){
   await captureEvent(input.distinctId,"$ai_generation",{
     "$ai_trace_id":input.traceId,
     "$ai_session_id":input.conversationId,
-    "$ai_model":"openai/gpt-oss-120b",
-    "$ai_provider":"groq",
+    "$ai_model":input.model,
+    "$ai_provider":input.provider,
     "$ai_latency":input.latencyMs/1000,
     "$ai_input_tokens":input.inputTokens??null,
     "$ai_output_tokens":input.outputTokens??null,
     "$ai_stream":false,
-    "$ai_tools":input.web?["browser_search"]:[],
+    "$ai_tools":input.research?["europe_pmc_search"]:[],
     "$ai_is_error":Boolean(input.error),
     "$ai_error":input.error||null,
     "privacy_mode":true

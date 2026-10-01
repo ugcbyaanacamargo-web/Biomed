@@ -3,7 +3,7 @@ import {z} from "zod";
 import {requireBearerToken,rpc} from "@/lib/db/supabase";
 import {apiError,noStoreJson} from "@/lib/api/http";
 import {captureEvent,captureGeneration} from "@/lib/analytics/posthog";
-import {generateStructuredTutorTurn} from "@/lib/ai/groq";
+import {generateStructuredTutorTurn,NVIDIA_MODEL} from "@/lib/ai/nvidia";
 
 const createSchema=z.object({title:z.string().trim().min(1).max(120).optional()}).strict();
 
@@ -33,7 +33,7 @@ export async function POST(request:Request){
       seeded=await rpc("biomed_ai_seed_assistant",{
         p_token:token,p_conversation_id:data.conversation.id,p_assistant_content:turn.message,
         p_ui:{schemaVersion:turn.schemaVersion,blocks:turn.blocks},
-        p_metadata:{provider:"groq",model:"openai/gpt-oss-120b",web:false,traceId},
+        p_metadata:{provider:"nvidia",model:NVIDIA_MODEL,research:false,traceId},
         p_title:turn.conversation.suggestedTitle,p_learning:turn.learning,p_memory_summary:turn.conversation.memorySummary
       });
       generation={
@@ -50,7 +50,8 @@ export async function POST(request:Request){
         ];
         if(generation)tasks.push(captureGeneration({
           distinctId:studentId,conversationId:data.conversation.id,traceId:generation.traceId,
-          latencyMs:generation.latencyMs,inputTokens:generation.inputTokens,outputTokens:generation.outputTokens,web:false
+          latencyMs:generation.latencyMs,inputTokens:generation.inputTokens,outputTokens:generation.outputTokens,
+          research:false,provider:"nvidia",model:NVIDIA_MODEL
         }));
         await Promise.allSettled(tasks);
       });

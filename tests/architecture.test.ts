@@ -12,12 +12,19 @@ describe("AI-first architecture",()=>{
   it("contains no replaced guided-course runtime",()=>{
     for(const path of legacy)expect(existsSync(path),path).toBe(false);
   });
-  it("uses direct Groq and one fixed model",()=>{
-    const groq=readFileSync("lib/ai/groq.ts","utf8");
-    expect(groq).toContain("https://api.groq.com/openai/v1/chat/completions");
-    expect(groq).toContain('openai/gpt-oss-120b');
-    expect(groq).not.toMatch(/ai-gateway|OpenCode|Railway|Sandbox/);
+
+  it("uses NVIDIA Nemotron as the primary direct tutor provider",()=>{
+    expect(existsSync("lib/ai/nvidia.ts")).toBe(true);
+    const nvidia=readFileSync("lib/ai/nvidia.ts","utf8");
+    const chat=readFileSync("app/api/chat/route.ts","utf8");
+    expect(nvidia).toContain("https://integrate.api.nvidia.com/v1/chat/completions");
+    expect(nvidia).toContain("nvidia/nemotron-3.5-lightning-30b-a3b");
+    expect(nvidia).toContain('type:"json_object"');
+    expect(nvidia).toContain("enable_thinking:false");
+    expect(chat).toContain('@/lib/ai/nvidia');
+    expect(chat).not.toContain('@/lib/ai/groq');
   });
+
   it("keeps the rich-learning contract and persistent memory",()=>{
     const schema=readFileSync("lib/ai/tutor-schema.ts","utf8");
     const migration=readFileSync("supabase/migrations/20260930221500_ai_first_conversations.sql","utf8");
